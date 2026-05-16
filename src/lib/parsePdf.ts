@@ -1,9 +1,7 @@
-import * as pdfjs from "pdfjs-dist";
+import { getDocument, GlobalWorkerOptions } from "pdfjs-dist";
+import pdfWorkerUrl from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 
-pdfjs.GlobalWorkerOptions.workerSrc = new URL(
-  "pdfjs-dist/build/pdf.worker.min.mjs",
-  import.meta.url
-).toString();
+GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
 
 const MAX_PAGES = 20;
 
@@ -17,7 +15,7 @@ export async function extractTextFromPdf(file: File): Promise<string> {
   }
 
   const buffer = await file.arrayBuffer();
-  const pdf = await pdfjs.getDocument({ data: buffer }).promise;
+  const pdf = await getDocument({ data: buffer }).promise;
   const pageCount = Math.min(pdf.numPages, MAX_PAGES);
   const parts: string[] = [];
 
