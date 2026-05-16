@@ -1,9 +1,13 @@
-import { getDocument, GlobalWorkerOptions } from "pdfjs-dist";
-import pdfWorkerUrl from "pdfjs-dist/build/pdf.worker.min.mjs?url";
+function uint8ArrayToBase64(bytes: Uint8Array): string {
+  let binary = "";
+  const chunkSize = 0x8000;
 
-GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
+  for (let i = 0; i < bytes.length; i += chunkSize) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + chunkSize));
+  }
 
-const MAX_PAGES = 20;
+  return btoa(binary);
+}
 
 export async function extractTextFromPdf(file: File): Promise<string> {
   if (file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf")) {
@@ -14,27 +18,31 @@ export async function extractTextFromPdf(file: File): Promise<string> {
     throw new Error("PDF must be under 10MB.");
   }
 
-  const buffer = await file.arrayBuffer();
-  const pdf = await getDocument({ data: buffer }).promise;
-  const pageCount = Math.min(pdf.numPages, MAX_PAGES);
-  const parts: string[] = [];
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  const pdfBase64 = uint8ArrayToBase64(bytes);
 
-  for (let i = 1; i <= pageCount; i++) {
-    const page = await pdf.getPage(i);
-    const content = await page.getTextContent();
-    const pageText = content.items
-      .map((item) => ("str" in item ? item.str : ""))
-      .join(" ");
-    parts.push(pageText);
+  const response = await fetch("/api/parse-cv", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ pdfBase64 }),
+  });
+
+  const data = (await response.json()) as { text?: string; error?: string };
+
+  if (!response.ok) {
+    throw new Error(
+      data.error ||
+        (response.status === 404
+          ? "PDF parser unavailable. Run `npx vercel dev` alongside `npm run dev`."
+          : "Failed to parse PDF")
+    );
   }
 
-  const text = parts.join("\n\n").replace(/\s+\n/g, "\n").trim();
-
-  if (!text) {
-    throw new Error("No text found in PDF. Try a text-based PDF or paste your CV manually.");
+  if (!data.text) {
+    throw new Error("No text returned from PDF parser.");
   }
 
-  return text;
+  return data.text;
 }
 
 export async function parseCvFile(file: File): Promise<string> {

@@ -6,7 +6,7 @@ AI-powered job application platform — tailor your CV and cover letter to any j
 
 - **Accounts** — Supabase Auth (email/password)
 - **Master CV** — save once, reuse on every application
-- **PDF / TXT upload** — extract CV text in the browser
+- **PDF / TXT upload** — TXT in browser; PDF parsed via `/api/parse-cv` (server-side)
 - **Saved history** — all generations per user (RLS-protected)
 - **Exports** — Copy, TXT, PDF, DOCX
 - **Backend API** — `/api/generate` on Vercel (OpenRouter key server-side)
@@ -66,6 +66,7 @@ npm run dev
 
 ```
 api/generate.ts       # Serverless CV generation
+api/parse-cv.ts       # Serverless PDF text extraction
 src/pages/            # Landing, Auth, Dashboard, History
 src/contexts/         # Auth provider
 src/lib/              # Supabase, exports, PDF parse, history
