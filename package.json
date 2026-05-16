@@ -8,7 +8,7 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "dev:full": "echo 'Run: npx vercel dev (port 3000) and npm run dev in another terminal'"
+    "dev:vercel": "vercel dev"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.105.1",

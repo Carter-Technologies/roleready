@@ -31,10 +31,7 @@ export async function extractTextFromPdf(file: File): Promise<string> {
 
   if (!response.ok) {
     throw new Error(
-      data.error ||
-        (response.status === 404
-          ? "PDF parser unavailable. Run `npx vercel dev` alongside `npm run dev`."
-          : "Failed to parse PDF")
+      data.error || "Failed to parse PDF"
     );
   }
 

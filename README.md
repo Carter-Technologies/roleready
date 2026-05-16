@@ -25,27 +25,13 @@ VITE_SUPABASE_URL=https://xxx.supabase.co
 VITE_SUPABASE_ANON_KEY=eyJ...
 ```
 
-### 2. OpenRouter (Vercel)
+### 2. OpenRouter
 
-Add to Vercel **Environment Variables** (not `VITE_`):
+Add to `.env` locally and Vercel **Environment Variables** (not `VITE_`):
 
 ```env
 OPENROUTER_API_KEY=sk-or-v1-...
 ```
-
-For local API routes, add the same to `.env` and run:
-
-```bash
-npx vercel dev
-```
-
-In another terminal:
-
-```bash
-npm run dev
-```
-
-Vite proxies `/api` to port 3000.
 
 ### 3. Install & run
 
@@ -53,6 +39,10 @@ Vite proxies `/api` to port 3000.
 npm install
 npm run dev
 ```
+
+`npm run dev` runs Vite **and** local `/api/*` routes (PDF parse + CV generate) — no second terminal needed.
+
+Optional: `npm run dev:vercel` to test exactly like production.
 
 ## Deploy (Vercel)
 
