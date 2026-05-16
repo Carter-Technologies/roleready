@@ -1,0 +1,6 @@
+# Never commit database dumps (may contain user PII)
+*.sql
+*.dump
+*.gz
+
+!.gitignore

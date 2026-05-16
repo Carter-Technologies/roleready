@@ -44,6 +44,16 @@ npm run dev
 
 Optional: `npm run dev:vercel` to test exactly like production.
 
+### Database backup (local)
+
+Add `SUPABASE_DB_URL` to `.env` (Supabase → Settings → Database → URI), then:
+
+```bash
+./scripts/backup-db.sh
+```
+
+Dumps are saved to `supabase/backups/` (gitignored). Install `pg_dump` if needed: `brew install libpq`.
+
 ## Deploy (Vercel)
 
 - Root directory: `./`
