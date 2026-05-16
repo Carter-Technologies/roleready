@@ -2,8 +2,14 @@
 
 AI-powered job application platform — tailor your CV and cover letter to any job in seconds.
 
-## V2 features
+## Features
 
+### V3 — ATS intelligence
+- **ATS analysis** — `/api/analyze-ats` (keyword scoring, missing skills, ATS tips, resume feedback)
+- **Analyze + tailor** — Dashboard: analyze fit, then generate tailored CV and cover letter
+- **History** — ATS score and full report saved per generation
+
+### V2
 - **Accounts** — Supabase Auth (email/password)
 - **Master CV** — save once, reuse on every application
 - **PDF / TXT upload** — TXT in browser; PDF parsed via `/api/parse-cv` (server-side)
@@ -16,7 +22,9 @@ AI-powered job application platform — tailor your CV and cover letter to any j
 ### 1. Supabase
 
 1. Create a project at [supabase.com](https://supabase.com).
-2. Run the SQL in `supabase/migrations/001_v2_auth_and_rls.sql` in the SQL Editor.
+2. Run migrations in the SQL Editor (in order):
+   - `supabase/migrations/001_v2_auth_and_rls.sql`
+   - `supabase/migrations/002_v3_ats.sql`
 3. Under **Authentication → Providers**, enable Email. For local dev you may disable “Confirm email” under Email settings.
 4. Copy **Project URL** and **anon key** into `.env`:
 
@@ -56,19 +64,27 @@ Dumps are saved to `supabase/backups/` (gitignored). Install `pg_dump` if needed
 
 ## Deploy (Vercel)
 
-- Root directory: `./`
-- Build: `npm run build`
-- Output: `dist`
-- Node.js: **22.x**
-- Env: `VITE_SUPABASE_*`, `OPENROUTER_API_KEY`
+1. Connect repo **Carter-Technologies/roleready** (root `./`).
+2. **Environment variables** (Production + Preview):
+   - `VITE_SUPABASE_URL`
+   - `VITE_SUPABASE_ANON_KEY`
+   - `OPENROUTER_API_KEY` (server-only, no `VITE_` prefix)
+3. **Supabase production**: run `002_v3_ats.sql` if not already applied.
+4. Deploy from `main` — `vercel.json` sets Vite build + API routes.
+
+Settings: Build `npm run build`, Output `dist`, Node.js **22.x**.
+
+After deploy, test: `POST https://your-app.vercel.app/api/analyze-ats` with JSON `{ "cv": "...", "jobDesc": "..." }` — should return `{ "analysis": { ... } }`, not `FUNCTION_INVOCATION_FAILED`.
 
 ## Project structure
 
 ```
-api/generate.ts       # Serverless CV generation
-api/parse-cv.ts       # Serverless PDF text extraction
-src/pages/            # Landing, Auth, Dashboard, History
-src/contexts/         # Auth provider
-src/lib/              # Supabase, exports, PDF parse, history
-supabase/migrations/  # RLS + profiles schema
+api/generate.ts         # Serverless CV generation
+api/analyze-ats.ts      # Serverless ATS analysis (V3)
+api/parse-cv.ts         # Serverless PDF text extraction
+api/_lib/               # Shared API logic (bundled with routes)
+src/pages/              # Landing, Auth, Dashboard, History
+src/contexts/           # Auth provider
+src/lib/                # Supabase, exports, PDF parse, history
+supabase/migrations/    # RLS + V3 ATS columns
 ```

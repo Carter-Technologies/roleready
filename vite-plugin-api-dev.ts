@@ -1,9 +1,9 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
 import type { Plugin } from "vite";
 import { loadEnv } from "vite";
-import { analyzeAts } from "./server/analyzeAts";
-import { generateTailoredCv } from "./server/generate";
-import { parsePdfFromBase64 } from "./server/parsePdf";
+import { analyzeAts } from "./api/_lib/analyzeAts";
+import { generateTailoredCv } from "./api/_lib/generate";
+import { parsePdfFromBase64 } from "./api/_lib/parsePdf";
 
 function readJsonBody(req: IncomingMessage): Promise<unknown> {
   return new Promise((resolve, reject) => {

@@ -1,5 +1,9 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { parsePdfFromBase64 } from "../server/parsePdf";
+import { parsePdfFromBase64 } from "./_lib/parsePdf";
+
+export const config = {
+  maxDuration: 60,
+};
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "POST") {
