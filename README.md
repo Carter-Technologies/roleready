@@ -1,75 +1,73 @@
-# React + TypeScript + Vite
+# RoleReady
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+AI-powered job application platform — tailor your CV and cover letter to any job in seconds.
 
-Currently, two official plugins are available:
+## V2 features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- **Accounts** — Supabase Auth (email/password)
+- **Master CV** — save once, reuse on every application
+- **PDF / TXT upload** — extract CV text in the browser
+- **Saved history** — all generations per user (RLS-protected)
+- **Exports** — Copy, TXT, PDF, DOCX
+- **Backend API** — `/api/generate` on Vercel (OpenRouter key server-side)
 
-## React Compiler
+## Setup
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### 1. Supabase
 
-## Expanding the ESLint configuration
+1. Create a project at [supabase.com](https://supabase.com).
+2. Run the SQL in `supabase/migrations/001_v2_auth_and_rls.sql` in the SQL Editor.
+3. Under **Authentication → Providers**, enable Email. For local dev you may disable “Confirm email” under Email settings.
+4. Copy **Project URL** and **anon key** into `.env`:
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```env
+VITE_SUPABASE_URL=https://xxx.supabase.co
+VITE_SUPABASE_ANON_KEY=eyJ...
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### 2. OpenRouter (Vercel)
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+Add to Vercel **Environment Variables** (not `VITE_`):
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```env
+OPENROUTER_API_KEY=sk-or-v1-...
 ```
-# roleready
-# roleready
+
+For local API routes, add the same to `.env` and run:
+
+```bash
+npx vercel dev
+```
+
+In another terminal:
+
+```bash
+npm run dev
+```
+
+Vite proxies `/api` to port 3000.
+
+### 3. Install & run
+
+```bash
+npm install
+npm run dev
+```
+
+## Deploy (Vercel)
+
+- Root directory: `./`
+- Build: `npm run build`
+- Output: `dist`
+- Node.js: **22.x**
+- Env: `VITE_SUPABASE_*`, `OPENROUTER_API_KEY`
+
+## Project structure
+
+```
+api/generate.ts       # Serverless CV generation
+src/pages/            # Landing, Auth, Dashboard, History
+src/contexts/         # Auth provider
+src/lib/              # Supabase, exports, PDF parse, history
+supabase/migrations/  # RLS + profiles schema
+```
