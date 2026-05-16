@@ -11,6 +11,7 @@ import {
   linkGenerationToApplication,
 } from "../lib/applications";
 import { deleteGeneration, fetchGenerations } from "../lib/history";
+import { getGenerationDisplay, parseJobDescription } from "../lib/jobMeta";
 import type { Generation, JobApplication } from "../lib/types";
 
 export function History() {
@@ -60,8 +61,12 @@ export function History() {
 
   const handleAddToTracker = async (item: Generation) => {
     if (!user || item.application_id) return;
-    const company = item.job_title?.split(" at ")?.[1] ?? "Company";
-    const role = item.job_title?.split(" at ")?.[0] ?? item.job_title ?? "Role";
+    const meta = parseJobDescription(item.job_description);
+    const fromTitle = item.job_title?.includes("·")
+      ? item.job_title.split("·").map((p) => p.trim())
+      : item.job_title?.split(/\s+at\s+/i).map((p) => p.trim());
+    const company = fromTitle?.[1] || meta.company || "Company";
+    const role = fromTitle?.[0] || meta.roleTitle || item.job_title || "Role";
     try {
       await createApplicationFromGeneration({
         userId: user.id,
@@ -86,12 +91,6 @@ export function History() {
       alert(err instanceof Error ? err.message : "Delete failed");
     }
   };
-
-  const formatDate = (iso: string) =>
-    new Date(iso).toLocaleString(undefined, {
-      dateStyle: "medium",
-      timeStyle: "short",
-    });
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
@@ -127,6 +126,7 @@ export function History() {
       <ul className="space-y-4">
         {items.map((item) => {
           const open = expandedId === item.id;
+          const display = getGenerationDisplay(item);
           return (
             <li
               key={item.id}
@@ -138,10 +138,8 @@ export function History() {
                 onClick={() => setExpandedId(open ? null : item.id)}
               >
                 <div>
-                  <p className="font-semibold text-slate-900">
-                    {item.job_title || "Untitled role"}
-                  </p>
-                  <p className="mt-1 text-sm text-slate-500">{formatDate(item.created_at)}</p>
+                  <p className="font-semibold text-slate-900 leading-snug">{display.title}</p>
+                  <p className="mt-1 text-sm text-slate-500">{display.subtitle}</p>
                   {item.ats_score != null && (
                     <p className="mt-2 text-sm font-medium text-olive-700">
                       ATS score: {item.ats_score}/100

@@ -10,6 +10,7 @@ import {
   STATUS_LABELS,
   type ApplicationStatus,
 } from "../lib/applicationStatus";
+import { getGenerationDisplay } from "../lib/jobMeta";
 import type { FollowUpDraft, Generation, InterviewPrep, JobApplication } from "../lib/types";
 
 type ApplicationDetailProps = {
@@ -20,9 +21,7 @@ type ApplicationDetailProps = {
 };
 
 function formatGenerationLabel(gen: Generation) {
-  const title = gen.job_title || "Untitled role";
-  const date = new Date(gen.created_at).toLocaleDateString(undefined, { dateStyle: "medium" });
-  return `${title} (${date})`;
+  return getGenerationDisplay(gen).title;
 }
 
 export function ApplicationDetail({

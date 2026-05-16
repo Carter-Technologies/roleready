@@ -7,7 +7,8 @@ import { analyzeAts } from "../lib/analyzeAts";
 import { generateCV } from "../lib/generateCV";
 import { createApplicationFromGeneration } from "../lib/applications";
 import { saveGeneration, updateMasterCv } from "../lib/history";
-import { guessJobTitle, splitAIResult } from "../lib/splitResult";
+import { parseJobDescription } from "../lib/jobMeta";
+import { splitAIResult } from "../lib/splitResult";
 import { Link } from "react-router-dom";
 import type { AtsAnalysis } from "../lib/types";
 
@@ -89,17 +90,10 @@ export function Dashboard() {
 
       const result = await generateCV(cv, jobDesc);
       const split = splitAIResult(result || "");
-      const jobTitle = guessJobTitle(jobDesc);
+      const jobMeta = parseJobDescription(jobDesc);
 
       setOutputCV(split.tailoredCV);
       setCoverLetter(split.coverLetter);
-
-      const company =
-        jobDesc
-          .split("\n")
-          .find((l) => /company|employer|organization/i.test(l))
-          ?.replace(/^[^:]*:\s*/, "")
-          .trim() || "Company";
 
       const saved = await saveGeneration({
         userId: user.id,
@@ -107,7 +101,7 @@ export function Dashboard() {
         jobDesc,
         tailoredCv: split.tailoredCV,
         coverLetter: split.coverLetter,
-        jobTitle,
+        jobTitle: jobMeta.displayTitle,
         atsScore: currentAnalysis.score,
         atsAnalysis: currentAnalysis,
       });
@@ -115,8 +109,8 @@ export function Dashboard() {
       if (saved) {
         const app = await createApplicationFromGeneration({
           userId: user.id,
-          company,
-          roleTitle: jobTitle,
+          company: jobMeta.company || "Company",
+          roleTitle: jobMeta.roleTitle || jobMeta.displayTitle,
           cvRequestId: saved.id,
           status: "applied",
         });

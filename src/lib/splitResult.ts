@@ -10,15 +10,4 @@ export function splitAIResult(result: string): SplitResult {
   };
 }
 
-export function guessJobTitle(jobDesc: string): string {
-  const lines = jobDesc
-    .split("\n")
-    .map((l) => l.trim())
-    .filter(Boolean);
-
-  const titleLine =
-    lines.find((l) => /engineer|developer|manager|analyst|designer|lead|role/i.test(l)) ||
-    lines[0];
-
-  return titleLine?.slice(0, 120) || "Untitled role";
-}
+export { guessJobTitle, parseJobDescription } from "./jobMeta";
