@@ -1,7 +1,13 @@
 import { Link } from "react-router-dom";
-import { FileText, Sparkles, History, Shield } from "lucide-react";
+import { FileText, Sparkles, History, Shield, Target } from "lucide-react";
 
 const features = [
+  {
+    icon: Target,
+    title: "ATS intelligence",
+    description:
+      "Keyword scoring, missing skills, ATS tips, and resume feedback before you apply.",
+  },
   {
     icon: Sparkles,
     title: "AI tailoring in seconds",
@@ -31,14 +37,14 @@ export function Landing() {
       <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24">
         <div className="mx-auto max-w-3xl text-center">
           <p className="mb-4 inline-block rounded-full bg-violet-100 px-4 py-1 text-sm font-medium text-violet-800">
-            V2 — Job application copilot
+            V3 — ATS intelligence + tailoring
           </p>
           <h1 className="text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl">
             Apply faster. Get interviews.
           </h1>
           <p className="mt-6 text-lg text-slate-600">
-            RoleReady tailors your CV and cover letter to every job description — with saved
-            history, PDF upload, and professional exports.
+            RoleReady scores your fit against the job, optimizes for ATS, then tailors your CV
+            and cover letter — with saved history, PDF upload, and exports.
           </p>
           <div className="mt-10 flex flex-wrap justify-center gap-4">
             <Link
@@ -58,7 +64,7 @@ export function Landing() {
       </section>
 
       <section className="border-t border-slate-200 bg-white py-16">
-        <div className="mx-auto grid max-w-6xl gap-8 px-4 sm:grid-cols-2 sm:px-6 lg:grid-cols-4">
+        <div className="mx-auto grid max-w-6xl gap-8 px-4 sm:grid-cols-2 sm:px-6 lg:grid-cols-3 xl:grid-cols-5">
           {features.map(({ icon: Icon, title, description }) => (
             <div key={title} className="rounded-2xl border border-slate-100 p-6 shadow-sm">
               <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-violet-100 text-violet-700">

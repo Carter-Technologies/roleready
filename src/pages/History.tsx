@@ -2,7 +2,9 @@ import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Trash2 } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
+import { AtsReport } from "../components/AtsReport";
 import { ExportMenu } from "../components/ExportMenu";
+import type { AtsAnalysis } from "../lib/types";
 import { deleteGeneration, fetchGenerations } from "../lib/history";
 import type { Generation } from "../lib/types";
 
@@ -97,12 +99,23 @@ export function History() {
                     {item.job_title || "Untitled role"}
                   </p>
                   <p className="mt-1 text-sm text-slate-500">{formatDate(item.created_at)}</p>
+                  {item.ats_score != null && (
+                    <p className="mt-2 text-sm font-medium text-violet-700">
+                      ATS score: {item.ats_score}/100
+                    </p>
+                  )}
                 </div>
                 <span className="text-sm text-violet-700">{open ? "Hide" : "View"}</span>
               </button>
 
               {open && (
                 <div className="border-t border-slate-100 p-5 space-y-6">
+                  {item.ats_analysis && (
+                    <div>
+                      <h3 className="mb-3 font-medium text-slate-800">ATS analysis</h3>
+                      <AtsReport analysis={item.ats_analysis as AtsAnalysis} />
+                    </div>
+                  )}
                   <div>
                     <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
                       <h3 className="font-medium text-slate-800">Tailored CV</h3>

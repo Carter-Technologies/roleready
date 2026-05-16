@@ -1,3 +1,19 @@
+export type AtsAnalysis = {
+  score: number;
+  keywordScoring: {
+    matchPercentage: number;
+    matchedKeywords: string[];
+    missingKeywords: string[];
+  };
+  atsOptimisation: string[];
+  missingSkills: {
+    skill: string;
+    importance: "high" | "medium" | "low";
+    suggestion: string;
+  }[];
+  resumeFeedback: string[];
+};
+
 export type Generation = {
   id: string;
   created_at: string;
@@ -7,6 +23,8 @@ export type Generation = {
   cover_letter: string | null;
   job_title: string | null;
   user_id: string;
+  ats_score: number | null;
+  ats_analysis: AtsAnalysis | null;
 };
 
 export type Profile = {

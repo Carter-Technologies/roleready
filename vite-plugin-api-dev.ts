@@ -1,6 +1,7 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
 import type { Plugin } from "vite";
 import { loadEnv } from "vite";
+import { analyzeAts } from "./server/analyzeAts";
 import { generateTailoredCv } from "./server/generate";
 import { parsePdfFromBase64 } from "./server/parsePdf";
 
@@ -36,7 +37,11 @@ export function apiDevPlugin(): Plugin {
       server.middlewares.use(async (req, res, next) => {
         const url = req.url?.split("?")[0];
 
-        if (url !== "/api/parse-cv" && url !== "/api/generate") {
+        if (
+          url !== "/api/parse-cv" &&
+          url !== "/api/generate" &&
+          url !== "/api/analyze-ats"
+        ) {
           return next();
         }
 
@@ -51,6 +56,16 @@ export function apiDevPlugin(): Plugin {
           if (url === "/api/parse-cv") {
             const text = await parsePdfFromBase64(body.pdfBase64);
             sendJson(res, 200, { text });
+            return;
+          }
+
+          if (url === "/api/analyze-ats") {
+            const analysis = await analyzeAts(
+              body.cv,
+              body.jobDesc,
+              env.OPENROUTER_API_KEY || process.env.OPENROUTER_API_KEY || ""
+            );
+            sendJson(res, 200, { analysis });
             return;
           }
 

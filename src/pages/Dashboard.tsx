@@ -1,20 +1,28 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
+import { AtsReport } from "../components/AtsReport";
 import { CvInput } from "../components/CvInput";
 import { ExportMenu } from "../components/ExportMenu";
+import { analyzeAts } from "../lib/analyzeAts";
 import { generateCV } from "../lib/generateCV";
 import { saveGeneration, updateMasterCv } from "../lib/history";
 import { guessJobTitle, splitAIResult } from "../lib/splitResult";
+import type { AtsAnalysis } from "../lib/types";
 
 export function Dashboard() {
   const { user, profile, refreshProfile } = useAuth();
   const [cv, setCv] = useState("");
   const [jobDesc, setJobDesc] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [analyzing, setAnalyzing] = useState(false);
+  const [generating, setGenerating] = useState(false);
+  const [analysis, setAnalysis] = useState<AtsAnalysis | null>(null);
   const [outputCV, setOutputCV] = useState("");
   const [coverLetter, setCoverLetter] = useState("");
   const [saveStatus, setSaveStatus] = useState("");
   const [masterStatus, setMasterStatus] = useState("");
+  const [error, setError] = useState("");
+
+  const busy = analyzing || generating;
 
   useEffect(() => {
     if (profile?.master_cv && !cv) {
@@ -29,25 +37,52 @@ export function Dashboard() {
       await updateMasterCv(user.id, cv);
       await refreshProfile();
       setMasterStatus("Master CV saved");
-    } catch (error) {
-      setMasterStatus(error instanceof Error ? error.message : "Save failed");
+    } catch (err) {
+      setMasterStatus(err instanceof Error ? err.message : "Save failed");
+    }
+  };
+
+  const validateInput = () => {
+    if (!cv.trim() || !jobDesc.trim()) {
+      setError("Please fill in both your CV and the job description.");
+      return false;
+    }
+    setError("");
+    return true;
+  };
+
+  const handleAnalyze = async () => {
+    if (!validateInput() || !user) return;
+
+    setAnalyzing(true);
+    setError("");
+    try {
+      const result = await analyzeAts(cv, jobDesc);
+      setAnalysis(result);
+    } catch (err) {
+      console.error(err);
+      setError(err instanceof Error ? err.message : "Analysis failed.");
+    } finally {
+      setAnalyzing(false);
     }
   };
 
   const handleGenerate = async () => {
-    if (!cv.trim() || !jobDesc.trim()) {
-      alert("Please fill in both fields");
-      return;
-    }
+    if (!validateInput() || !user) return;
 
-    if (!user) return;
-
-    setLoading(true);
+    setGenerating(true);
+    setError("");
     setOutputCV("");
     setCoverLetter("");
     setSaveStatus("");
 
     try {
+      let currentAnalysis = analysis;
+      if (!currentAnalysis) {
+        currentAnalysis = await analyzeAts(cv, jobDesc);
+        setAnalysis(currentAnalysis);
+      }
+
       const result = await generateCV(cv, jobDesc);
       const split = splitAIResult(result || "");
       const jobTitle = guessJobTitle(jobDesc);
@@ -62,23 +97,26 @@ export function Dashboard() {
         tailoredCv: split.tailoredCV,
         coverLetter: split.coverLetter,
         jobTitle,
+        atsScore: currentAnalysis.score,
+        atsAnalysis: currentAnalysis,
       });
 
       setSaveStatus("Saved to your history");
-    } catch (error) {
-      console.error(error);
-      alert(error instanceof Error ? error.message : "Something went wrong.");
+    } catch (err) {
+      console.error(err);
+      setError(err instanceof Error ? err.message : "Something went wrong.");
     } finally {
-      setLoading(false);
+      setGenerating(false);
     }
   };
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-slate-900">Tailor application</h1>
+        <p className="text-sm font-medium text-violet-700">V3 — ATS intelligence</p>
+        <h1 className="mt-1 text-3xl font-bold text-slate-900">Tailor application</h1>
         <p className="mt-2 text-slate-600">
-          Upload or paste your CV, add a job description, and generate a tailored pack.
+          Analyze your fit, then generate a tailored CV and cover letter.
         </p>
       </div>
 
@@ -90,9 +128,7 @@ export function Dashboard() {
             showSaveMaster
             onSaveMaster={() => void handleSaveMaster()}
           />
-          {masterStatus && (
-            <p className="mt-2 text-sm text-slate-600">{masterStatus}</p>
-          )}
+          {masterStatus && <p className="mt-2 text-sm text-slate-600">{masterStatus}</p>}
         </div>
 
         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
@@ -106,16 +142,43 @@ export function Dashboard() {
         </div>
       </div>
 
-      <button
-        type="button"
-        onClick={() => void handleGenerate()}
-        disabled={loading}
-        className="mt-6 rounded-xl bg-slate-900 px-8 py-3 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-50"
-      >
-        {loading ? "Generating…" : "Tailor my CV"}
-      </button>
+      <div className="mt-6 flex flex-wrap gap-3">
+        <button
+          type="button"
+          onClick={() => void handleAnalyze()}
+          disabled={busy}
+          className="rounded-xl border border-violet-200 bg-violet-50 px-6 py-3 text-sm font-semibold text-violet-800 hover:bg-violet-100 disabled:opacity-50"
+        >
+          {analyzing ? "Analyzing…" : "Analyze ATS fit"}
+        </button>
+        <button
+          type="button"
+          onClick={() => void handleGenerate()}
+          disabled={busy}
+          className="rounded-xl bg-slate-900 px-6 py-3 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-50"
+        >
+          {generating ? "Generating…" : "Tailor my CV"}
+        </button>
+      </div>
 
+      {error && (
+        <p className="mt-4 text-sm text-red-600" role="alert">
+          {error}
+        </p>
+      )}
       {saveStatus && <p className="mt-3 text-sm text-emerald-700">{saveStatus}</p>}
+
+      {analysis && (
+        <div className="mt-10 rounded-2xl border border-violet-200 bg-white p-6 shadow-sm">
+          <h2 className="text-xl font-semibold text-slate-900">ATS analysis report</h2>
+          <p className="mt-1 text-sm text-slate-600">
+            Keyword scoring, ATS tips, missing skills, and resume feedback.
+          </p>
+          <div className="mt-6">
+            <AtsReport analysis={analysis} />
+          </div>
+        </div>
+      )}
 
       {(outputCV || coverLetter) && (
         <div className="mt-10 space-y-6">
@@ -145,3 +208,4 @@ export function Dashboard() {
     </div>
   );
 }
+

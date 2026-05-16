@@ -1,5 +1,5 @@
 import { supabase } from "./supabase";
-import type { Generation } from "./types";
+import type { AtsAnalysis, Generation } from "./types";
 
 export async function fetchGenerations(userId: string): Promise<Generation[]> {
   const { data, error } = await supabase
@@ -19,6 +19,8 @@ export async function saveGeneration(input: {
   tailoredCv: string;
   coverLetter: string;
   jobTitle: string;
+  atsScore?: number | null;
+  atsAnalysis?: AtsAnalysis | null;
 }): Promise<Generation | null> {
   const { data, error } = await supabase
     .from("cv_requests")
@@ -29,6 +31,8 @@ export async function saveGeneration(input: {
       tailored_cv: input.tailoredCv,
       cover_letter: input.coverLetter,
       job_title: input.jobTitle,
+      ats_score: input.atsScore ?? null,
+      ats_analysis: input.atsAnalysis ?? null,
     })
     .select()
     .single();
