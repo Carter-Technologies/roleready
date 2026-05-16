@@ -113,7 +113,7 @@ export function Dashboard() {
   return (
     <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
       <div className="mb-8">
-        <p className="text-sm font-medium text-violet-700">V3 — ATS intelligence</p>
+        <p className="text-sm font-medium text-olive-700">V3 — ATS intelligence</p>
         <h1 className="mt-1 text-3xl font-bold text-slate-900">Tailor application</h1>
         <p className="mt-2 text-slate-600">
           Analyze your fit, then generate a tailored CV and cover letter.
@@ -134,7 +134,7 @@ export function Dashboard() {
         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
           <label className="text-sm font-semibold text-slate-800">Job description</label>
           <textarea
-            className="mt-3 h-64 w-full resize-y rounded-xl border border-slate-200 p-4 text-sm leading-relaxed text-slate-800 shadow-sm focus:border-violet-400 focus:outline-none focus:ring-2 focus:ring-violet-100"
+            className="mt-3 h-64 w-full resize-y rounded-xl border border-slate-200 p-4 text-sm leading-relaxed text-slate-800 shadow-sm focus:border-olive-400 focus:outline-none focus:ring-2 focus:ring-olive-100"
             placeholder="Paste the job description here…"
             value={jobDesc}
             onChange={(e) => setJobDesc(e.target.value)}
@@ -147,7 +147,7 @@ export function Dashboard() {
           type="button"
           onClick={() => void handleAnalyze()}
           disabled={busy}
-          className="rounded-xl border border-violet-200 bg-violet-50 px-6 py-3 text-sm font-semibold text-violet-800 hover:bg-violet-100 disabled:opacity-50"
+          className="rounded-xl border border-olive-200 bg-olive-50 px-6 py-3 text-sm font-semibold text-olive-800 hover:bg-olive-100 disabled:opacity-50"
         >
           {analyzing ? "Analyzing…" : "Analyze ATS fit"}
         </button>
@@ -169,7 +169,7 @@ export function Dashboard() {
       {saveStatus && <p className="mt-3 text-sm text-emerald-700">{saveStatus}</p>}
 
       {analysis && (
-        <div className="mt-10 rounded-2xl border border-violet-200 bg-white p-6 shadow-sm">
+        <div className="mt-10 rounded-2xl border border-olive-200 bg-white p-6 shadow-sm">
           <h2 className="text-xl font-semibold text-slate-900">ATS analysis report</h2>
           <p className="mt-1 text-sm text-slate-600">
             Keyword scoring, ATS tips, missing skills, and resume feedback.

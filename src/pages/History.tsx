@@ -59,7 +59,7 @@ export function History() {
         </div>
         <Link
           to="/app"
-          className="rounded-xl bg-violet-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-violet-700"
+          className="rounded-xl bg-olive-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-olive-700"
         >
           New application
         </Link>
@@ -75,7 +75,7 @@ export function History() {
       {!loading && !error && items.length === 0 && (
         <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-12 text-center">
           <p className="text-slate-600">No applications yet.</p>
-          <Link to="/app" className="mt-4 inline-block text-violet-700 font-medium hover:underline">
+          <Link to="/app" className="mt-4 inline-block text-olive-700 font-medium hover:underline">
             Tailor your first CV →
           </Link>
         </div>
@@ -100,12 +100,12 @@ export function History() {
                   </p>
                   <p className="mt-1 text-sm text-slate-500">{formatDate(item.created_at)}</p>
                   {item.ats_score != null && (
-                    <p className="mt-2 text-sm font-medium text-violet-700">
+                    <p className="mt-2 text-sm font-medium text-olive-700">
                       ATS score: {item.ats_score}/100
                     </p>
                   )}
                 </div>
-                <span className="text-sm text-violet-700">{open ? "Hide" : "View"}</span>
+                <span className="text-sm text-olive-700">{open ? "Hide" : "View"}</span>
               </button>
 
               {open && (

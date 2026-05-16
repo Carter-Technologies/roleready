@@ -47,7 +47,7 @@ export function CvInput({ value, onChange, onSaveMaster, showSaveMaster }: CvInp
             <button
               type="button"
               onClick={onSaveMaster}
-              className="rounded-lg border border-violet-200 bg-violet-50 px-3 py-2 text-sm font-medium text-violet-800 hover:bg-violet-100"
+              className="rounded-lg border border-olive-200 bg-olive-50 px-3 py-2 text-sm font-medium text-olive-800 hover:bg-olive-100"
             >
               Save as master CV
             </button>
@@ -70,7 +70,7 @@ export function CvInput({ value, onChange, onSaveMaster, showSaveMaster }: CvInp
       )}
 
       <textarea
-        className="h-64 w-full resize-y rounded-xl border border-slate-200 p-4 text-sm leading-relaxed text-slate-800 shadow-sm focus:border-violet-400 focus:outline-none focus:ring-2 focus:ring-violet-100"
+        className="h-64 w-full resize-y rounded-xl border border-slate-200 p-4 text-sm leading-relaxed text-slate-800 shadow-sm focus:border-olive-400 focus:outline-none focus:ring-2 focus:ring-olive-100"
         placeholder="Paste your CV here, or upload a PDF…"
         value={value}
         onChange={(e) => onChange(e.target.value)}

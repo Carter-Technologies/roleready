@@ -2,6 +2,14 @@
 
 @theme {
   --font-sans: system-ui, "Segoe UI", Roboto, sans-serif;
+
+  --color-olive-50: #f5f7ee;
+  --color-olive-100: #e9eed8;
+  --color-olive-200: #d3ddb8;
+  --color-olive-400: #8f9f5c;
+  --color-olive-600: #6b7c3f;
+  --color-olive-700: #556330;
+  --color-olive-800: #434d26;
 }
 
 body {

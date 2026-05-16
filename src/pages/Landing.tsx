@@ -36,7 +36,7 @@ export function Landing() {
     <div>
       <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24">
         <div className="mx-auto max-w-3xl text-center">
-          <p className="mb-4 inline-block rounded-full bg-violet-100 px-4 py-1 text-sm font-medium text-violet-800">
+          <p className="mb-4 inline-block rounded-full bg-olive-100 px-4 py-1 text-sm font-medium text-olive-800">
             V3 — ATS intelligence + tailoring
           </p>
           <h1 className="text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl">
@@ -49,7 +49,7 @@ export function Landing() {
           <div className="mt-10 flex flex-wrap justify-center gap-4">
             <Link
               to="/signup"
-              className="rounded-xl bg-violet-600 px-8 py-3 text-base font-semibold text-white shadow-lg shadow-violet-200 hover:bg-violet-700"
+              className="rounded-xl bg-olive-600 px-8 py-3 text-base font-semibold text-white shadow-lg shadow-olive-200 hover:bg-olive-700"
             >
               Start free
             </Link>
@@ -67,7 +67,7 @@ export function Landing() {
         <div className="mx-auto grid max-w-6xl gap-8 px-4 sm:grid-cols-2 sm:px-6 lg:grid-cols-3 xl:grid-cols-5">
           {features.map(({ icon: Icon, title, description }) => (
             <div key={title} className="rounded-2xl border border-slate-100 p-6 shadow-sm">
-              <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-violet-100 text-violet-700">
+              <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-olive-100 text-olive-700">
                 <Icon className="h-5 w-5" />
               </div>
               <h3 className="font-semibold text-slate-900">{title}</h3>

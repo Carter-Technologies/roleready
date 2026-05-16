@@ -66,7 +66,7 @@ export function Auth({ mode }: { mode: AuthMode }) {
               type="text"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
-              className="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-violet-400 focus:outline-none focus:ring-2 focus:ring-violet-100"
+              className="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-olive-400 focus:outline-none focus:ring-2 focus:ring-olive-100"
               placeholder="Jane Smith"
             />
           </div>
@@ -79,7 +79,7 @@ export function Auth({ mode }: { mode: AuthMode }) {
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-violet-400 focus:outline-none focus:ring-2 focus:ring-violet-100"
+            className="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-olive-400 focus:outline-none focus:ring-2 focus:ring-olive-100"
             placeholder="you@email.com"
           />
         </div>
@@ -92,7 +92,7 @@ export function Auth({ mode }: { mode: AuthMode }) {
             minLength={6}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-violet-400 focus:outline-none focus:ring-2 focus:ring-violet-100"
+            className="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-olive-400 focus:outline-none focus:ring-2 focus:ring-olive-100"
             placeholder="••••••••"
           />
         </div>
@@ -107,7 +107,7 @@ export function Auth({ mode }: { mode: AuthMode }) {
         <button
           type="submit"
           disabled={submitting}
-          className="w-full rounded-xl bg-violet-600 py-3 text-sm font-semibold text-white hover:bg-violet-700 disabled:opacity-50"
+          className="w-full rounded-xl bg-olive-600 py-3 text-sm font-semibold text-white hover:bg-olive-700 disabled:opacity-50"
         >
           {submitting ? "Please wait…" : mode === "login" ? "Log in" : "Sign up"}
         </button>
@@ -117,14 +117,14 @@ export function Auth({ mode }: { mode: AuthMode }) {
         {mode === "login" ? (
           <>
             No account?{" "}
-            <Link to="/signup" className="font-medium text-violet-700 hover:underline">
+            <Link to="/signup" className="font-medium text-olive-700 hover:underline">
               Sign up
             </Link>
           </>
         ) : (
           <>
             Already have an account?{" "}
-            <Link to="/login" className="font-medium text-violet-700 hover:underline">
+            <Link to="/login" className="font-medium text-olive-700 hover:underline">
               Log in
             </Link>
           </>

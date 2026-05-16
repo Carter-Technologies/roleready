@@ -4,7 +4,7 @@ import { useAuth } from "../contexts/AuthContext";
 const navLinkClass = (active: boolean) =>
   `rounded-lg px-3 py-2 text-sm font-medium transition ${
     active
-      ? "bg-violet-600 text-white"
+      ? "bg-olive-600 text-white"
       : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
   }`;
 
@@ -17,7 +17,7 @@ export function Layout() {
       <header className="border-b border-slate-200/80 bg-white/80 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-4 sm:px-6">
           <Link to={user ? "/app" : "/"} className="flex items-center gap-2">
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-violet-600 text-sm font-bold text-white">
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-olive-600 text-sm font-bold text-white">
               RR
             </span>
             <span className="text-lg font-semibold text-slate-900">RoleReady</span>
@@ -53,7 +53,7 @@ export function Layout() {
                 </Link>
                 <Link
                   to="/signup"
-                  className="rounded-lg bg-violet-600 px-4 py-2 text-sm font-medium text-white hover:bg-violet-700"
+                  className="rounded-lg bg-olive-600 px-4 py-2 text-sm font-medium text-white hover:bg-olive-700"
                 >
                   Get started
                 </Link>
