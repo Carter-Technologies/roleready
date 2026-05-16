@@ -5,9 +5,13 @@ import { useAuth } from "../contexts/AuthContext";
 import { AtsReport } from "../components/AtsReport";
 import { ExportMenu } from "../components/ExportMenu";
 import type { AtsAnalysis } from "../lib/types";
-import { createApplicationFromGeneration } from "../lib/applications";
+import {
+  createApplicationFromGeneration,
+  fetchApplications,
+  linkGenerationToApplication,
+} from "../lib/applications";
 import { deleteGeneration, fetchGenerations } from "../lib/history";
-import type { Generation } from "../lib/types";
+import type { Generation, JobApplication } from "../lib/types";
 
 export function History() {
   const { user } = useAuth();
@@ -15,14 +19,20 @@ export function History() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [trackerApps, setTrackerApps] = useState<JobApplication[]>([]);
+  const [linkTargetByGen, setLinkTargetByGen] = useState<Record<string, string>>({});
 
   const load = useCallback(async () => {
     if (!user) return;
     setLoading(true);
     setError("");
     try {
-      const data = await fetchGenerations(user.id);
+      const [data, apps] = await Promise.all([
+        fetchGenerations(user.id),
+        fetchApplications(user.id),
+      ]);
       setItems(data);
+      setTrackerApps(apps);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load history");
     } finally {
@@ -33,6 +43,20 @@ export function History() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  const handleLinkToExisting = async (item: Generation) => {
+    const appId = linkTargetByGen[item.id];
+    if (!appId) {
+      alert("Choose a tracker card to link this CV to.");
+      return;
+    }
+    try {
+      await linkGenerationToApplication(appId, item.id);
+      await load();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Failed to link to tracker");
+    }
+  };
 
   const handleAddToTracker = async (item: Generation) => {
     if (!user || item.application_id) return;
@@ -165,32 +189,67 @@ export function History() {
                     </div>
                   )}
 
-                  <div className="flex flex-wrap gap-4">
-                    {!item.application_id && (
+                  <div className="space-y-3 border-t border-slate-100 pt-4">
+                    {!item.application_id && trackerApps.length > 0 && (
+                      <div className="flex flex-wrap items-end gap-2">
+                        <div className="min-w-[200px] flex-1">
+                          <label className="text-xs font-medium text-slate-500">
+                            Link to existing tracker card
+                          </label>
+                          <select
+                            value={linkTargetByGen[item.id] ?? ""}
+                            onChange={(e) =>
+                              setLinkTargetByGen((prev) => ({
+                                ...prev,
+                                [item.id]: e.target.value,
+                              }))
+                            }
+                            className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                          >
+                            <option value="">Select card…</option>
+                            {trackerApps.map((app) => (
+                              <option key={app.id} value={app.id}>
+                                {app.company} — {app.role_title}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => void handleLinkToExisting(item)}
+                          className="rounded-lg border border-olive-200 bg-olive-50 px-3 py-2 text-sm font-medium text-olive-800 hover:bg-olive-100"
+                        >
+                          Link to card
+                        </button>
+                      </div>
+                    )}
+                    <div className="flex flex-wrap gap-4">
+                      {!item.application_id && (
+                        <button
+                          type="button"
+                          onClick={() => void handleAddToTracker(item)}
+                          className="text-sm font-medium text-olive-700 hover:text-olive-800"
+                        >
+                          Create new tracker card
+                        </button>
+                      )}
+                      {item.application_id && (
+                        <Link
+                          to="/tracker"
+                          className="text-sm font-medium text-olive-700 hover:underline"
+                        >
+                          View in tracker
+                        </Link>
+                      )}
                       <button
                         type="button"
-                        onClick={() => void handleAddToTracker(item)}
-                        className="text-sm font-medium text-olive-700 hover:text-olive-800"
+                        onClick={() => void handleDelete(item.id)}
+                        className="inline-flex items-center gap-2 text-sm text-red-600 hover:text-red-700"
                       >
-                        Add to tracker
+                        <Trash2 className="h-4 w-4" />
+                        Delete
                       </button>
-                    )}
-                    {item.application_id && (
-                      <Link
-                        to="/tracker"
-                        className="text-sm font-medium text-olive-700 hover:underline"
-                      >
-                        In tracker
-                      </Link>
-                    )}
-                    <button
-                      type="button"
-                      onClick={() => void handleDelete(item.id)}
-                      className="inline-flex items-center gap-2 text-sm text-red-600 hover:text-red-700"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                      Delete
-                    </button>
+                    </div>
                   </div>
                 </div>
               )}

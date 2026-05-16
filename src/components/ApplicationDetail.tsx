@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { X } from "lucide-react";
 import { InterviewPrepPanel } from "./InterviewPrepPanel";
-import { updateApplication } from "../lib/applications";
+import { linkGenerationToApplication, updateApplication } from "../lib/applications";
 import { fetchFollowUpDraft } from "../lib/followUp";
 import { fetchGenerations } from "../lib/history";
 import { fetchInterviewPrep } from "../lib/interviewPrep";
@@ -19,6 +19,12 @@ type ApplicationDetailProps = {
   onUpdated: (app: JobApplication) => void;
 };
 
+function formatGenerationLabel(gen: Generation) {
+  const title = gen.job_title || "Untitled role";
+  const date = new Date(gen.created_at).toLocaleDateString(undefined, { dateStyle: "medium" });
+  return `${title} (${date})`;
+}
+
 export function ApplicationDetail({
   application,
   userId,
@@ -26,7 +32,10 @@ export function ApplicationDetail({
   onUpdated,
 }: ApplicationDetailProps) {
   const [app, setApp] = useState(application);
+  const [generations, setGenerations] = useState<Generation[]>([]);
   const [linkedGen, setLinkedGen] = useState<Generation | null>(null);
+  const [selectedGenId, setSelectedGenId] = useState("");
+  const [linking, setLinking] = useState(false);
   const [prep, setPrep] = useState<InterviewPrep | null>(
     (application.interview_prep as InterviewPrep | null) ?? null
   );
@@ -46,14 +55,18 @@ export function ApplicationDetail({
   useEffect(() => {
     setApp(application);
     setPrep((application.interview_prep as InterviewPrep | null) ?? null);
+    setSelectedGenId(application.primary_cv_request_id ?? "");
   }, [application]);
 
   useEffect(() => {
-    if (!app.primary_cv_request_id) return;
     void fetchGenerations(userId).then((gens) => {
-      setLinkedGen(gens.find((g) => g.id === app.primary_cv_request_id) ?? null);
+      setGenerations(gens);
+      const primary = app.primary_cv_request_id
+        ? gens.find((g) => g.id === app.primary_cv_request_id) ?? null
+        : null;
+      setLinkedGen(primary);
     });
-  }, [app.primary_cv_request_id, userId]);
+  }, [userId, app.primary_cv_request_id]);
 
   const getLinkedGeneration = async (): Promise<Generation | null> => {
     if (linkedGen) return linkedGen;
@@ -62,6 +75,26 @@ export function ApplicationDetail({
     const found = gens.find((g) => g.id === app.primary_cv_request_id) ?? null;
     setLinkedGen(found);
     return found;
+  };
+
+  const handleLinkGeneration = async () => {
+    if (!selectedGenId) {
+      setError("Choose a tailored CV from your history.");
+      return;
+    }
+    setLinking(true);
+    setError("");
+    try {
+      const updated = await linkGenerationToApplication(app.id, selectedGenId);
+      const gen = generations.find((g) => g.id === selectedGenId) ?? null;
+      setApp(updated);
+      setLinkedGen(gen);
+      onUpdated(updated);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to link CV");
+    } finally {
+      setLinking(false);
+    }
   };
 
   const handleStatusChange = async (status: ApplicationStatus) => {
@@ -91,7 +124,7 @@ export function ApplicationDetail({
   const handleInterviewPrep = async () => {
     const gen = await getLinkedGeneration();
     if (!gen) {
-      setError("Link a tailored CV from History to generate interview prep.");
+      setError("Link a tailored CV below before generating interview prep.");
       return;
     }
 
@@ -112,12 +145,17 @@ export function ApplicationDetail({
 
   const handleFollowUp = async () => {
     const gen = await getLinkedGeneration();
+    if (!gen) {
+      setError("Link a tailored CV below before drafting a follow-up.");
+      return;
+    }
+
     setLoadingFollowUp(true);
     setError("");
     try {
       const draft = await fetchFollowUpDraft({
-        cv: gen?.original_cv ?? "",
-        jobDesc: gen?.job_description ?? "",
+        cv: gen.original_cv,
+        jobDesc: gen.job_description,
         company: app.company,
         roleTitle: app.role_title,
         notes: app.notes ?? "",
@@ -134,6 +172,10 @@ export function ApplicationDetail({
       setLoadingFollowUp(false);
     }
   };
+
+  const linkableGenerations = generations.filter(
+    (g) => !g.application_id || g.application_id === app.id || g.id === app.primary_cv_request_id
+  );
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end bg-black/30 p-4 sm:p-6">
@@ -153,7 +195,7 @@ export function ApplicationDetail({
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto space-y-6 p-5">
+        <div className="flex-1 space-y-6 overflow-y-auto p-5">
           <div>
             <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
               Status
@@ -185,6 +227,39 @@ export function ApplicationDetail({
             </p>
           )}
 
+          <section className="rounded-xl border border-olive-200 bg-olive-50/40 p-4">
+            <h3 className="text-sm font-semibold text-slate-900">Linked tailored CV</h3>
+            <p className="mt-1 text-xs text-slate-600">
+              Pick a generation from History to power interview prep and follow-ups on this card.
+            </p>
+            {linkedGen ? (
+              <p className="mt-3 text-sm font-medium text-olive-800">{formatGenerationLabel(linkedGen)}</p>
+            ) : (
+              <p className="mt-3 text-sm text-amber-800">No CV linked yet.</p>
+            )}
+            <select
+              value={selectedGenId}
+              onChange={(e) => setSelectedGenId(e.target.value)}
+              className="mt-3 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm"
+            >
+              <option value="">Select from history…</option>
+              {linkableGenerations.map((g) => (
+                <option key={g.id} value={g.id}>
+                  {formatGenerationLabel(g)}
+                  {g.application_id && g.application_id !== app.id ? " (linked elsewhere)" : ""}
+                </option>
+              ))}
+            </select>
+            <button
+              type="button"
+              disabled={linking || !selectedGenId}
+              onClick={() => void handleLinkGeneration()}
+              className="mt-3 w-full rounded-lg bg-olive-600 py-2 text-sm font-semibold text-white hover:bg-olive-700 disabled:opacity-50"
+            >
+              {linking ? "Linking…" : "Link to this card"}
+            </button>
+          </section>
+
           <div>
             <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
               Notes
@@ -200,7 +275,7 @@ export function ApplicationDetail({
           <div className="flex flex-wrap gap-2">
             <button
               type="button"
-              disabled={loadingPrep}
+              disabled={loadingPrep || !linkedGen}
               onClick={() => void handleInterviewPrep()}
               className="rounded-lg border border-olive-200 bg-olive-50 px-4 py-2 text-sm font-medium text-olive-800 hover:bg-olive-100 disabled:opacity-50"
             >
@@ -208,7 +283,7 @@ export function ApplicationDetail({
             </button>
             <button
               type="button"
-              disabled={loadingFollowUp}
+              disabled={loadingFollowUp || !linkedGen}
               onClick={() => void handleFollowUp()}
               className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-50"
             >

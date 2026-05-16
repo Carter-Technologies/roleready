@@ -54,6 +54,7 @@ export async function updateApplication(
     applied_at: string | null;
     follow_up_at: string | null;
     interview_at: string | null;
+    primary_cv_request_id: string | null;
     interview_prep: unknown;
     follow_up_draft: string | null;
   }>
@@ -84,6 +85,39 @@ export async function linkCvRequestToApplication(
     .eq("id", cvRequestId);
 
   if (error) throw new Error(error.message);
+}
+
+/** Attach an existing history row to this tracker card (no new card). */
+export async function linkGenerationToApplication(
+  applicationId: string,
+  cvRequestId: string
+): Promise<JobApplication> {
+  const { data: app, error: appErr } = await supabase
+    .from("job_applications")
+    .select("primary_cv_request_id")
+    .eq("id", applicationId)
+    .single();
+
+  if (appErr || !app) throw new Error(appErr?.message ?? "Application not found");
+
+  const previousPrimary = app.primary_cv_request_id as string | null;
+
+  if (previousPrimary && previousPrimary !== cvRequestId) {
+    await supabase
+      .from("cv_requests")
+      .update({ application_id: null })
+      .eq("id", previousPrimary);
+  }
+
+  await supabase
+    .from("job_applications")
+    .update({ primary_cv_request_id: null })
+    .eq("primary_cv_request_id", cvRequestId)
+    .neq("id", applicationId);
+
+  await linkCvRequestToApplication(cvRequestId, applicationId);
+
+  return updateApplication(applicationId, { primary_cv_request_id: cvRequestId });
 }
 
 export async function createApplicationFromGeneration(input: {
