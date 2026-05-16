@@ -6,6 +6,7 @@ import { Auth } from "./pages/Auth";
 import { Dashboard } from "./pages/Dashboard";
 import { History } from "./pages/History";
 import { Landing } from "./pages/Landing";
+import { Tracker } from "./pages/Tracker";
 
 function App() {
   return (
@@ -21,6 +22,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <Dashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/tracker"
+              element={
+                <ProtectedRoute>
+                  <Tracker />
                 </ProtectedRoute>
               }
             />

@@ -5,6 +5,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { AtsReport } from "../components/AtsReport";
 import { ExportMenu } from "../components/ExportMenu";
 import type { AtsAnalysis } from "../lib/types";
+import { createApplicationFromGeneration } from "../lib/applications";
 import { deleteGeneration, fetchGenerations } from "../lib/history";
 import type { Generation } from "../lib/types";
 
@@ -32,6 +33,24 @@ export function History() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  const handleAddToTracker = async (item: Generation) => {
+    if (!user || item.application_id) return;
+    const company = item.job_title?.split(" at ")?.[1] ?? "Company";
+    const role = item.job_title?.split(" at ")?.[0] ?? item.job_title ?? "Role";
+    try {
+      await createApplicationFromGeneration({
+        userId: user.id,
+        company,
+        roleTitle: role,
+        cvRequestId: item.id,
+        status: "applied",
+      });
+      await load();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Failed to add to tracker");
+    }
+  };
 
   const handleDelete = async (id: string) => {
     if (!confirm("Delete this application from history?")) return;
@@ -146,14 +165,33 @@ export function History() {
                     </div>
                   )}
 
-                  <button
-                    type="button"
-                    onClick={() => void handleDelete(item.id)}
-                    className="inline-flex items-center gap-2 text-sm text-red-600 hover:text-red-700"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                    Delete
-                  </button>
+                  <div className="flex flex-wrap gap-4">
+                    {!item.application_id && (
+                      <button
+                        type="button"
+                        onClick={() => void handleAddToTracker(item)}
+                        className="text-sm font-medium text-olive-700 hover:text-olive-800"
+                      >
+                        Add to tracker
+                      </button>
+                    )}
+                    {item.application_id && (
+                      <Link
+                        to="/tracker"
+                        className="text-sm font-medium text-olive-700 hover:underline"
+                      >
+                        In tracker
+                      </Link>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => void handleDelete(item.id)}
+                      className="inline-flex items-center gap-2 text-sm text-red-600 hover:text-red-700"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      Delete
+                    </button>
+                  </div>
                 </div>
               )}
             </li>

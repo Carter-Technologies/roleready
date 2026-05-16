@@ -1,7 +1,13 @@
 import { Link } from "react-router-dom";
-import { FileText, Sparkles, History, Shield, Target } from "lucide-react";
+import { FileText, Sparkles, History, Shield, Target, Kanban } from "lucide-react";
 
 const features = [
+  {
+    icon: Kanban,
+    title: "Job tracker",
+    description:
+      "Kanban pipeline from wishlist to offer. Interview prep and follow-up drafts per role.",
+  },
   {
     icon: Target,
     title: "ATS intelligence",
@@ -37,14 +43,14 @@ export function Landing() {
       <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24">
         <div className="mx-auto max-w-3xl text-center">
           <p className="mb-4 inline-block rounded-full bg-olive-100 px-4 py-1 text-sm font-medium text-olive-800">
-            V3 — ATS intelligence + tailoring
+            V4 — Track, prep, and apply
           </p>
           <h1 className="text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl">
             Apply faster. Get interviews.
           </h1>
           <p className="mt-6 text-lg text-slate-600">
-            RoleReady scores your fit against the job, optimizes for ATS, then tailors your CV
-            and cover letter — with saved history, PDF upload, and exports.
+            ATS scoring, tailored CVs, a job tracker, interview prep, and follow-up drafts —
+            your full application workflow in one place.
           </p>
           <div className="mt-10 flex flex-wrap justify-center gap-4">
             <Link

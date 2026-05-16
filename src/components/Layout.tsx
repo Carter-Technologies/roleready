@@ -30,6 +30,12 @@ export function Layout() {
                   Tailor
                 </Link>
                 <Link
+                  to="/tracker"
+                  className={navLinkClass(location.pathname === "/tracker")}
+                >
+                  Tracker
+                </Link>
+                <Link
                   to="/history"
                   className={navLinkClass(location.pathname === "/history")}
                 >

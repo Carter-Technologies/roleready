@@ -5,8 +5,10 @@ import { CvInput } from "../components/CvInput";
 import { ExportMenu } from "../components/ExportMenu";
 import { analyzeAts } from "../lib/analyzeAts";
 import { generateCV } from "../lib/generateCV";
+import { createApplicationFromGeneration } from "../lib/applications";
 import { saveGeneration, updateMasterCv } from "../lib/history";
 import { guessJobTitle, splitAIResult } from "../lib/splitResult";
+import { Link } from "react-router-dom";
 import type { AtsAnalysis } from "../lib/types";
 
 export function Dashboard() {
@@ -19,6 +21,7 @@ export function Dashboard() {
   const [outputCV, setOutputCV] = useState("");
   const [coverLetter, setCoverLetter] = useState("");
   const [saveStatus, setSaveStatus] = useState("");
+  const [trackerLink, setTrackerLink] = useState("");
   const [masterStatus, setMasterStatus] = useState("");
   const [error, setError] = useState("");
 
@@ -75,6 +78,7 @@ export function Dashboard() {
     setOutputCV("");
     setCoverLetter("");
     setSaveStatus("");
+    setTrackerLink("");
 
     try {
       let currentAnalysis = analysis;
@@ -90,7 +94,14 @@ export function Dashboard() {
       setOutputCV(split.tailoredCV);
       setCoverLetter(split.coverLetter);
 
-      await saveGeneration({
+      const company =
+        jobDesc
+          .split("\n")
+          .find((l) => /company|employer|organization/i.test(l))
+          ?.replace(/^[^:]*:\s*/, "")
+          .trim() || "Company";
+
+      const saved = await saveGeneration({
         userId: user.id,
         originalCv: cv,
         jobDesc,
@@ -101,7 +112,18 @@ export function Dashboard() {
         atsAnalysis: currentAnalysis,
       });
 
-      setSaveStatus("Saved to your history");
+      if (saved) {
+        const app = await createApplicationFromGeneration({
+          userId: user.id,
+          company,
+          roleTitle: jobTitle,
+          cvRequestId: saved.id,
+          status: "applied",
+        });
+        setTrackerLink(app.id);
+      }
+
+      setSaveStatus("Saved to history and job tracker");
     } catch (err) {
       console.error(err);
       setError(err instanceof Error ? err.message : "Something went wrong.");
@@ -113,7 +135,7 @@ export function Dashboard() {
   return (
     <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
       <div className="mb-8">
-        <p className="text-sm font-medium text-olive-700">V3 — ATS intelligence</p>
+        <p className="text-sm font-medium text-olive-700">V4 — Tailor + track</p>
         <h1 className="mt-1 text-3xl font-bold text-slate-900">Tailor application</h1>
         <p className="mt-2 text-slate-600">
           Analyze your fit, then generate a tailored CV and cover letter.
@@ -166,7 +188,19 @@ export function Dashboard() {
           {error}
         </p>
       )}
-      {saveStatus && <p className="mt-3 text-sm text-emerald-700">{saveStatus}</p>}
+      {saveStatus && (
+        <p className="mt-3 text-sm text-emerald-700">
+          {saveStatus}
+          {trackerLink && (
+            <>
+              {" "}
+              <Link to="/tracker" className="font-medium text-olive-800 underline">
+                View in tracker
+              </Link>
+            </>
+          )}
+        </p>
+      )}
 
       {analysis && (
         <div className="mt-10 rounded-2xl border border-olive-200 bg-white p-6 shadow-sm">

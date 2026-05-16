@@ -21,6 +21,7 @@ export async function saveGeneration(input: {
   jobTitle: string;
   atsScore?: number | null;
   atsAnalysis?: AtsAnalysis | null;
+  applicationId?: string | null;
 }): Promise<Generation | null> {
   const { data, error } = await supabase
     .from("cv_requests")
@@ -33,6 +34,7 @@ export async function saveGeneration(input: {
       job_title: input.jobTitle,
       ats_score: input.atsScore ?? null,
       ats_analysis: input.atsAnalysis ?? null,
+      application_id: input.applicationId ?? null,
     })
     .select()
     .single();
