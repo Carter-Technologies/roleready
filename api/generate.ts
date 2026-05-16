@@ -1,28 +1,27 @@
-import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { generateTailoredCv } from "./_lib/generate";
 
 export const config = {
-  maxDuration: 60,
+  runtime: "edge",
 };
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed" });
+export default async function handler(request: Request) {
+  if (request.method !== "POST") {
+    return Response.json({ error: "Method not allowed" }, { status: 405 });
   }
 
   try {
-    const { cv, jobDesc } = req.body;
+    const body = (await request.json()) as { cv?: string; jobDesc?: string };
     const result = await generateTailoredCv(
-      cv,
-      jobDesc,
+      body.cv ?? "",
+      body.jobDesc ?? "",
       process.env.OPENROUTER_API_KEY ?? ""
     );
-    return res.status(200).json({ result });
+    return Response.json({ result });
   } catch (error) {
     console.error("Generate API error:", error);
     const message =
       error instanceof Error ? error.message : "Something went wrong generating your CV.";
     const status = message.includes("required") ? 400 : 500;
-    return res.status(status).json({ error: message });
+    return Response.json({ error: message }, { status });
   }
 }
