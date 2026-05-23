@@ -22,11 +22,11 @@ export default async function handler(request: Request) {
     const user = await getUserFromRequest(request);
     if (!user) throw new BillingError("UNAUTHORIZED", "Sign in required");
 
-    const priceId = process.env.STRIPE_PRICE_ID_PRO_MONTHLY;
+    const priceId = process.env.STRIPE_PRICE_ID_PRO_MONTHLY?.trim().replace(/^["']|["']$/g, "");
     if (!priceId) throw new Error("STRIPE_PRICE_ID_PRO_MONTHLY is not configured");
-    if (priceId.startsWith("prod_")) {
+    if (!priceId.startsWith("price_")) {
       throw new Error(
-        "STRIPE_PRICE_ID_PRO_MONTHLY must be a Price ID (price_...), not a Product ID (prod_...). In Stripe: Product → Pricing → copy the Price ID."
+        `STRIPE_PRICE_ID_PRO_MONTHLY must be a Price ID (price_...). Current value starts with "${priceId.slice(0, 5)}...". Update it in Vercel → Settings → Environment Variables (Production), then redeploy — local .env is not used on roleready.vercel.app.`
       );
     }
 
