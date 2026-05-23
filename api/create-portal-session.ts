@@ -1,17 +1,11 @@
-import Stripe from "stripe";
 import { getUserFromRequest } from "./_lib/auth";
 import { BillingError, billingErrorResponse } from "./_lib/billing";
 import { getSupabaseAdmin } from "./_lib/supabaseAdmin";
+import { getStripe } from "./_lib/stripe";
 
 export const config = {
-  runtime: "nodejs",
+  runtime: "edge",
 };
-
-function getStripe() {
-  const key = process.env.STRIPE_SECRET_KEY;
-  if (!key) throw new Error("STRIPE_SECRET_KEY is not configured");
-  return new Stripe(key);
-}
 
 export default async function handler(request: Request) {
   if (request.method !== "POST") {
@@ -23,18 +17,21 @@ export default async function handler(request: Request) {
     if (!user) throw new BillingError("UNAUTHORIZED", "Sign in required");
 
     const admin = getSupabaseAdmin();
-    const { data: profile } = await admin
+    const { data: profile, error: profileError } = await admin
       .from("profiles")
       .select("stripe_customer_id")
       .eq("id", user.id)
-      .single();
+      .maybeSingle();
+
+    if (profileError) throw new Error(profileError.message);
 
     const customerId = profile?.stripe_customer_id as string | undefined;
     if (!customerId) {
       throw new BillingError("UPGRADE_REQUIRED", "No billing account found. Subscribe first.");
     }
 
-    const origin = request.headers.get("origin") || process.env.VITE_APP_URL || "https://roleready.vercel.app";
+    const origin =
+      request.headers.get("origin") || process.env.VITE_APP_URL || "https://roleready.vercel.app";
     const stripe = getStripe();
     const session = await stripe.billingPortal.sessions.create({
       customer: customerId,
@@ -43,6 +40,7 @@ export default async function handler(request: Request) {
 
     return Response.json({ url: session.url });
   } catch (err) {
+    console.error("create-portal-session:", err);
     return billingErrorResponse(err);
   }
 }

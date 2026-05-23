@@ -1,30 +1,13 @@
-import type { VercelRequest, VercelResponse } from "@vercel/node";
-import Stripe from "stripe";
+import type Stripe from "stripe";
 import { setUserFree, setUserPro } from "./_lib/billing";
+import { getStripe } from "./_lib/stripe";
 
 export const config = {
-  api: {
-    bodyParser: false,
-  },
+  runtime: "edge",
 };
 
-function getStripe() {
-  const key = process.env.STRIPE_SECRET_KEY;
-  if (!key) throw new Error("STRIPE_SECRET_KEY is not configured");
-  return new Stripe(key);
-}
-
-async function readRawBody(req: VercelRequest): Promise<Buffer> {
-  return new Promise((resolve, reject) => {
-    const chunks: Buffer[] = [];
-    req.on("data", (chunk: Buffer) => chunks.push(chunk));
-    req.on("end", () => resolve(Buffer.concat(chunks)));
-    req.on("error", reject);
-  });
-}
-
 async function resolveUserId(
-  stripe: Stripe,
+  stripe: ReturnType<typeof getStripe>,
   metadata: Stripe.Metadata | null,
   customerId: string | Stripe.Customer | Stripe.DeletedCustomer | null
 ) {
@@ -40,25 +23,24 @@ async function resolveUserId(
   return null;
 }
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed" });
+export default async function handler(request: Request) {
+  if (request.method !== "POST") {
+    return Response.json({ error: "Method not allowed" }, { status: 405 });
   }
 
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
   if (!webhookSecret) {
-    return res.status(500).json({ error: "STRIPE_WEBHOOK_SECRET not configured" });
+    return Response.json({ error: "STRIPE_WEBHOOK_SECRET not configured" }, { status: 500 });
   }
 
-  const stripe = getStripe();
-  const sig = req.headers["stripe-signature"];
-
-  if (!sig || typeof sig !== "string") {
-    return res.status(400).json({ error: "Missing stripe-signature" });
+  const sig = request.headers.get("stripe-signature");
+  if (!sig) {
+    return Response.json({ error: "Missing stripe-signature" }, { status: 400 });
   }
 
   try {
-    const rawBody = await readRawBody(req);
+    const stripe = getStripe();
+    const rawBody = await request.text();
     const event = stripe.webhooks.constructEvent(rawBody, sig, webhookSecret);
 
     switch (event.type) {
@@ -107,10 +89,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         break;
     }
 
-    return res.status(200).json({ received: true });
+    return Response.json({ received: true });
   } catch (err) {
     console.error("Stripe webhook error:", err);
     const message = err instanceof Error ? err.message : "Webhook error";
-    return res.status(400).json({ error: message });
+    return Response.json({ error: message }, { status: 400 });
   }
 }

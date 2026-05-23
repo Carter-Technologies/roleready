@@ -1,17 +1,11 @@
-import Stripe from "stripe";
 import { getUserFromRequest } from "./_lib/auth";
 import { BillingError, billingErrorResponse } from "./_lib/billing";
 import { getSupabaseAdmin } from "./_lib/supabaseAdmin";
+import { getStripe } from "./_lib/stripe";
 
 export const config = {
-  runtime: "nodejs",
+  runtime: "edge",
 };
-
-function getStripe() {
-  const key = process.env.STRIPE_SECRET_KEY;
-  if (!key) throw new Error("STRIPE_SECRET_KEY is not configured");
-  return new Stripe(key);
-}
 
 function getOrigin(request: Request) {
   const origin = request.headers.get("origin");
@@ -34,11 +28,19 @@ export default async function handler(request: Request) {
     const stripe = getStripe();
     const admin = getSupabaseAdmin();
 
-    const { data: profile } = await admin
+    const { data: profile, error: profileError } = await admin
       .from("profiles")
       .select("stripe_customer_id, email")
       .eq("id", user.id)
-      .single();
+      .maybeSingle();
+
+    if (profileError) {
+      throw new Error(
+        profileError.message.includes("stripe_customer_id")
+          ? "Billing columns missing — run supabase/migrations/004_billing.sql"
+          : profileError.message
+      );
+    }
 
     let customerId = profile?.stripe_customer_id as string | undefined;
 
@@ -48,10 +50,11 @@ export default async function handler(request: Request) {
         metadata: { supabase_user_id: user.id },
       });
       customerId = customer.id;
-      await admin
+      const { error: updateError } = await admin
         .from("profiles")
         .update({ stripe_customer_id: customerId })
         .eq("id", user.id);
+      if (updateError) throw new Error(updateError.message);
     }
 
     const origin = getOrigin(request);
@@ -71,6 +74,7 @@ export default async function handler(request: Request) {
 
     return Response.json({ url: session.url });
   } catch (err) {
+    console.error("create-checkout-session:", err);
     return billingErrorResponse(err);
   }
 }
