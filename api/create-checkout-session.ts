@@ -24,6 +24,11 @@ export default async function handler(request: Request) {
 
     const priceId = process.env.STRIPE_PRICE_ID_PRO_MONTHLY;
     if (!priceId) throw new Error("STRIPE_PRICE_ID_PRO_MONTHLY is not configured");
+    if (priceId.startsWith("prod_")) {
+      throw new Error(
+        "STRIPE_PRICE_ID_PRO_MONTHLY must be a Price ID (price_...), not a Product ID (prod_...). In Stripe: Product → Pricing → copy the Price ID."
+      );
+    }
 
     const stripe = getStripe();
     const admin = getSupabaseAdmin();

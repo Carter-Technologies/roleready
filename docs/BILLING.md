@@ -29,7 +29,8 @@ RoleReady is configured for **Stripe Test mode** (Dashboard toggle: **Test mode*
 ### Setup
 
 1. Create a **Product** (e.g. RoleReady Pro) with a recurring **Price** (e.g. €12/month) in **Test mode**.
-2. Copy the Price ID → `STRIPE_PRICE_ID_PRO_MONTHLY`.
+2. Copy the **Price ID** (`price_...`) from the product’s pricing section → `STRIPE_PRICE_ID_PRO_MONTHLY`.  
+   Do **not** use the Product ID (`prod_...`) — Checkout will error with “No such price”.
 3. Add env vars in Vercel (and local `.env` for `vercel dev`):
    - `STRIPE_SECRET_KEY` (`sk_test_...` while in sandbox)
    - `STRIPE_WEBHOOK_SECRET` (from the **test** webhook endpoint)
