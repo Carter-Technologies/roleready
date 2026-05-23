@@ -1,5 +1,6 @@
 import { Link, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
+import { isPro } from "../lib/plan";
 
 const navLinkClass = (active: boolean) =>
   `rounded-lg px-3 py-2 text-sm font-medium transition ${
@@ -11,6 +12,7 @@ const navLinkClass = (active: boolean) =>
 export function Layout() {
   const { user, profile, signOut } = useAuth();
   const location = useLocation();
+  const pro = isPro(profile);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
@@ -29,19 +31,38 @@ export function Layout() {
                 <Link to="/app" className={navLinkClass(location.pathname === "/app")}>
                   Tailor
                 </Link>
-                <Link
-                  to="/tracker"
-                  className={navLinkClass(location.pathname === "/tracker")}
-                >
-                  Tracker
-                </Link>
+                {pro ? (
+                  <Link
+                    to="/tracker"
+                    className={navLinkClass(location.pathname === "/tracker")}
+                  >
+                    Tracker
+                  </Link>
+                ) : (
+                  <Link
+                    to="/pricing"
+                    className={navLinkClass(location.pathname === "/pricing")}
+                  >
+                    Tracker
+                  </Link>
+                )}
                 <Link
                   to="/history"
                   className={navLinkClass(location.pathname === "/history")}
                 >
                   History
                 </Link>
-                <span className="hidden px-2 text-sm text-slate-500 sm:inline">
+                <Link
+                  to="/pricing"
+                  className={
+                    pro
+                      ? "hidden sm:inline rounded-lg px-2 py-1 text-xs font-medium text-olive-700"
+                      : "rounded-lg bg-olive-600 px-3 py-2 text-sm font-medium text-white hover:bg-olive-700"
+                  }
+                >
+                  {pro ? "Pro" : "Upgrade"}
+                </Link>
+                <span className="hidden px-2 text-sm text-slate-500 lg:inline">
                   {profile?.full_name || profile?.email}
                 </span>
                 <button
@@ -54,6 +75,9 @@ export function Layout() {
               </>
             ) : (
               <>
+                <Link to="/pricing" className={navLinkClass(location.pathname === "/pricing")}>
+                  Pricing
+                </Link>
                 <Link to="/login" className={navLinkClass(location.pathname === "/login")}>
                   Log in
                 </Link>

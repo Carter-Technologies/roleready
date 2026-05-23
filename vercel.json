@@ -7,6 +7,15 @@
     "api/parse-cv.ts": {
       "maxDuration": 60,
       "memory": 1024
+    },
+    "api/stripe-webhook.ts": {
+      "maxDuration": 30
+    },
+    "api/create-checkout-session.ts": {
+      "maxDuration": 30
+    },
+    "api/create-portal-session.ts": {
+      "maxDuration": 30
     }
   }
 }

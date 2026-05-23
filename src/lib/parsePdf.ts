@@ -1,3 +1,5 @@
+import { getAuthHeaders } from "./apiClient";
+
 function uint8ArrayToBase64(bytes: Uint8Array): string {
   let binary = "";
   const chunkSize = 0x8000;
@@ -23,7 +25,7 @@ export async function extractTextFromPdf(file: File): Promise<string> {
 
   const response = await fetch("/api/parse-cv", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: await getAuthHeaders(),
     body: JSON.stringify({ pdfBase64 }),
   });
 

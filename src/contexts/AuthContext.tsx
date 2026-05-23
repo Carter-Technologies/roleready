@@ -9,6 +9,7 @@ import {
 } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "../lib/supabase";
+import { normalizeProfile } from "../lib/plan";
 import type { Profile } from "../lib/types";
 
 type AuthContextValue = {
@@ -42,7 +43,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    setProfile(data as Profile | null);
+    setProfile(normalizeProfile(data as Record<string, unknown> | null));
   }, []);
 
   const refreshProfile = useCallback(async () => {

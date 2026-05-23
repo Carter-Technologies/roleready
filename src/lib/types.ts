@@ -70,6 +70,12 @@ export type Profile = {
   email: string | null;
   full_name: string | null;
   master_cv: string | null;
+  plan: "free" | "pro";
+  tailor_usage_month: string | null;
+  tailor_usage_count: number;
+  stripe_customer_id: string | null;
+  stripe_subscription_id: string | null;
+  subscription_status: string | null;
   updated_at: string;
   created_at: string;
 };

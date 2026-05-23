@@ -4,6 +4,7 @@ import { Trash2 } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import { AtsReport } from "../components/AtsReport";
 import { ExportMenu } from "../components/ExportMenu";
+import { PlanBanner, UpgradeButton } from "../components/PlanBanner";
 import type { AtsAnalysis } from "../lib/types";
 import {
   createApplicationFromGeneration,
@@ -12,10 +13,12 @@ import {
 } from "../lib/applications";
 import { deleteGeneration, fetchGenerations } from "../lib/history";
 import { getGenerationDisplay, parseJobDescription } from "../lib/jobMeta";
+import { isPro } from "../lib/plan";
 import type { Generation, JobApplication } from "../lib/types";
 
 export function History() {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
+  const pro = isPro(profile);
   const [items, setItems] = useState<Generation[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -28,24 +31,27 @@ export function History() {
     setLoading(true);
     setError("");
     try {
-      const [data, apps] = await Promise.all([
-        fetchGenerations(user.id),
-        fetchApplications(user.id),
-      ]);
+      const data = await fetchGenerations(user.id);
       setItems(data);
-      setTrackerApps(apps);
+      if (pro) {
+        const apps = await fetchApplications(user.id);
+        setTrackerApps(apps);
+      } else {
+        setTrackerApps([]);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load history");
     } finally {
       setLoading(false);
     }
-  }, [user]);
+  }, [user, pro]);
 
   useEffect(() => {
     void load();
   }, [load]);
 
   const handleLinkToExisting = async (item: Generation) => {
+    if (!pro) return;
     const appId = linkTargetByGen[item.id];
     if (!appId) {
       alert("Choose a tracker card to link this CV to.");
@@ -60,7 +66,7 @@ export function History() {
   };
 
   const handleAddToTracker = async (item: Generation) => {
-    if (!user || item.application_id) return;
+    if (!pro || !user || item.application_id) return;
     const meta = parseJobDescription(item.job_description);
     const fromTitle = item.job_title?.includes("·")
       ? item.job_title.split("·").map((p) => p.trim())
@@ -97,7 +103,11 @@ export function History() {
       <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-slate-900">Application history</h1>
-          <p className="mt-2 text-slate-600">All your tailored CVs and cover letters in one place.</p>
+          <p className="mt-2 text-slate-600">
+            {pro
+              ? "All your tailored CVs and cover letters in one place."
+              : "Your free plan saves each month's tailored CV here."}
+          </p>
         </div>
         <Link
           to="/app"
@@ -106,6 +116,8 @@ export function History() {
           New application
         </Link>
       </div>
+
+      <PlanBanner className="mb-6" />
 
       {loading && <p className="text-slate-500">Loading history…</p>}
       {error && (
@@ -140,7 +152,7 @@ export function History() {
                 <div>
                   <p className="font-semibold text-slate-900 leading-snug">{display.title}</p>
                   <p className="mt-1 text-sm text-slate-500">{display.subtitle}</p>
-                  {item.ats_score != null && (
+                  {pro && item.ats_score != null && (
                     <p className="mt-2 text-sm font-medium text-olive-700">
                       ATS score: {item.ats_score}/100
                     </p>
@@ -151,7 +163,7 @@ export function History() {
 
               {open && (
                 <div className="border-t border-slate-100 p-5 space-y-6">
-                  {item.ats_analysis && (
+                  {pro && item.ats_analysis && (
                     <div>
                       <h3 className="mb-3 font-medium text-slate-800">ATS analysis</h3>
                       <AtsReport analysis={item.ats_analysis as AtsAnalysis} />
@@ -188,7 +200,7 @@ export function History() {
                   )}
 
                   <div className="space-y-3 border-t border-slate-100 pt-4">
-                    {!item.application_id && trackerApps.length > 0 && (
+                    {pro && !item.application_id && trackerApps.length > 0 && (
                       <div className="flex flex-wrap items-end gap-2">
                         <div className="min-w-[200px] flex-1">
                           <label className="text-xs font-medium text-slate-500">
@@ -221,8 +233,8 @@ export function History() {
                         </button>
                       </div>
                     )}
-                    <div className="flex flex-wrap gap-4">
-                      {!item.application_id && (
+                    <div className="flex flex-wrap items-center gap-4">
+                      {pro && !item.application_id && (
                         <button
                           type="button"
                           onClick={() => void handleAddToTracker(item)}
@@ -231,13 +243,21 @@ export function History() {
                           Create new tracker card
                         </button>
                       )}
-                      {item.application_id && (
+                      {pro && item.application_id && (
                         <Link
                           to="/tracker"
                           className="text-sm font-medium text-olive-700 hover:underline"
                         >
                           View in tracker
                         </Link>
+                      )}
+                      {!pro && (
+                        <p className="text-sm text-slate-500">
+                          Job tracker is on Pro.{" "}
+                          <Link to="/pricing" className="font-medium text-olive-700 hover:underline">
+                            Upgrade
+                          </Link>
+                        </p>
                       )}
                       <button
                         type="button"
@@ -255,6 +275,17 @@ export function History() {
           );
         })}
       </ul>
+
+      {!pro && items.length > 0 && (
+        <div className="mt-8 rounded-2xl border border-olive-200 bg-olive-50/50 p-6 text-center">
+          <p className="text-sm text-slate-700">
+            Unlock ATS reports, job tracker, and unlimited tailoring with Pro.
+          </p>
+          <div className="mt-4">
+            <UpgradeButton />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

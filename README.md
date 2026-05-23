@@ -25,6 +25,8 @@ AI-powered job application platform — tailor your CV and cover letter to any j
 2. Run migrations in the SQL Editor (in order):
    - `supabase/migrations/001_v2_auth_and_rls.sql`
    - `supabase/migrations/002_v3_ats.sql`
+   - `supabase/migrations/003_v4_tracker.sql`
+   - `supabase/migrations/004_billing.sql` (paywall)
 3. Under **Authentication → Providers**, enable Email. For local dev you may disable “Confirm email” under Email settings.
 4. Copy **Project URL** and **anon key** into `.env`:
 
@@ -41,7 +43,14 @@ Add to `.env` locally and Vercel **Environment Variables** (not `VITE_`):
 OPENROUTER_API_KEY=sk-or-v1-...
 ```
 
-### 3. Install & run
+### 3. Billing (optional for local dev)
+
+See [docs/BILLING.md](docs/BILLING.md). For production paywall add:
+
+- `SUPABASE_SERVICE_ROLE_KEY`
+- `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRICE_ID_PRO_MONTHLY`
+
+### 4. Install & run
 
 ```bash
 npm install
@@ -69,7 +78,9 @@ Dumps are saved to `supabase/backups/` (gitignored). Install `pg_dump` if needed
    - `VITE_SUPABASE_URL`
    - `VITE_SUPABASE_ANON_KEY`
    - `OPENROUTER_API_KEY` (server-only, no `VITE_` prefix)
-3. **Supabase production**: run `002_v3_ats.sql` if not already applied.
+   - `SUPABASE_SERVICE_ROLE_KEY` (billing + webhooks)
+   - Stripe: `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRICE_ID_PRO_MONTHLY`
+3. **Supabase production**: run all migrations through `004_billing.sql`.
 4. Deploy from `main` — `vercel.json` sets Vite build + API routes.
 
 Settings: Build `npm run build`, Output `dist`, Node.js **22.x**.

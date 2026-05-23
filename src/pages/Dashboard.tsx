@@ -1,19 +1,22 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { AtsReport } from "../components/AtsReport";
 import { CvInput } from "../components/CvInput";
 import { ExportMenu } from "../components/ExportMenu";
+import { PlanBanner } from "../components/PlanBanner";
 import { analyzeAts } from "../lib/analyzeAts";
 import { generateCV } from "../lib/generateCV";
 import { createApplicationFromGeneration } from "../lib/applications";
 import { saveGeneration, updateMasterCv } from "../lib/history";
 import { parseJobDescription } from "../lib/jobMeta";
+import { canTailor, isPro } from "../lib/plan";
 import { splitAIResult } from "../lib/splitResult";
-import { Link } from "react-router-dom";
 import type { AtsAnalysis } from "../lib/types";
 
 export function Dashboard() {
   const { user, profile, refreshProfile } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [cv, setCv] = useState("");
   const [jobDesc, setJobDesc] = useState("");
   const [analyzing, setAnalyzing] = useState(false);
@@ -24,8 +27,10 @@ export function Dashboard() {
   const [saveStatus, setSaveStatus] = useState("");
   const [trackerLink, setTrackerLink] = useState("");
   const [masterStatus, setMasterStatus] = useState("");
-  const [error, setError] = useState("");
+  const [error, setError] = useState<ReactNode>("");
 
+  const pro = isPro(profile);
+  const allowTailor = canTailor(profile);
   const busy = analyzing || generating;
 
   useEffect(() => {
@@ -33,6 +38,14 @@ export function Dashboard() {
       setCv(profile.master_cv);
     }
   }, [profile?.master_cv, cv]);
+
+  useEffect(() => {
+    if (searchParams.get("checkout") === "success") {
+      void refreshProfile();
+      setSaveStatus("Welcome to Pro! Your plan is now active.");
+      setSearchParams({}, { replace: true });
+    }
+  }, [searchParams, refreshProfile, setSearchParams]);
 
   const handleSaveMaster = async () => {
     if (!user || !cv.trim()) return;
@@ -56,6 +69,7 @@ export function Dashboard() {
   };
 
   const handleAnalyze = async () => {
+    if (!pro) return;
     if (!validateInput() || !user) return;
 
     setAnalyzing(true);
@@ -64,15 +78,26 @@ export function Dashboard() {
       const result = await analyzeAts(cv, jobDesc);
       setAnalysis(result);
     } catch (err) {
-      console.error(err);
-      setError(err instanceof Error ? err.message : "Analysis failed.");
+      const e = err as Error & { code?: string };
+      setError(
+        e.code === "UPGRADE_REQUIRED" ? (
+          <>
+            {e.message}{" "}
+            <Link to="/pricing" className="font-medium underline">
+              View plans
+            </Link>
+          </>
+        ) : (
+          e.message
+        )
+      );
     } finally {
       setAnalyzing(false);
     }
   };
 
   const handleGenerate = async () => {
-    if (!validateInput() || !user) return;
+    if (!validateInput() || !user || !allowTailor) return;
 
     setGenerating(true);
     setError("");
@@ -80,14 +105,9 @@ export function Dashboard() {
     setCoverLetter("");
     setSaveStatus("");
     setTrackerLink("");
+    setAnalysis(null);
 
     try {
-      let currentAnalysis = analysis;
-      if (!currentAnalysis) {
-        currentAnalysis = await analyzeAts(cv, jobDesc);
-        setAnalysis(currentAnalysis);
-      }
-
       const result = await generateCV(cv, jobDesc);
       const split = splitAIResult(result || "");
       const jobMeta = parseJobDescription(jobDesc);
@@ -102,11 +122,11 @@ export function Dashboard() {
         tailoredCv: split.tailoredCV,
         coverLetter: split.coverLetter,
         jobTitle: jobMeta.displayTitle,
-        atsScore: currentAnalysis.score,
-        atsAnalysis: currentAnalysis,
+        atsScore: null,
+        atsAnalysis: null,
       });
 
-      if (saved) {
+      if (saved && pro) {
         const app = await createApplicationFromGeneration({
           userId: user.id,
           company: jobMeta.company || "Company",
@@ -115,12 +135,26 @@ export function Dashboard() {
           status: "applied",
         });
         setTrackerLink(app.id);
+        setSaveStatus("Saved to history and job tracker");
+      } else if (saved) {
+        setSaveStatus("Saved to your history");
       }
 
-      setSaveStatus("Saved to history and job tracker");
+      await refreshProfile();
     } catch (err) {
-      console.error(err);
-      setError(err instanceof Error ? err.message : "Something went wrong.");
+      const e = err as Error & { code?: string };
+      if (e.code === "UPGRADE_REQUIRED") {
+        setError(
+          <>
+            {e.message}{" "}
+            <Link to="/pricing" className="font-medium underline">
+              Upgrade to Pro
+            </Link>
+          </>
+        );
+      } else {
+        setError(e.message);
+      }
     } finally {
       setGenerating(false);
     }
@@ -129,12 +163,15 @@ export function Dashboard() {
   return (
     <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
       <div className="mb-8">
-        <p className="text-sm font-medium text-olive-700">V4 — Tailor + track</p>
-        <h1 className="mt-1 text-3xl font-bold text-slate-900">Tailor application</h1>
+        <h1 className="text-3xl font-bold text-slate-900">Tailor application</h1>
         <p className="mt-2 text-slate-600">
-          Analyze your fit, then generate a tailored CV and cover letter.
+          {pro
+            ? "Generate tailored CVs, run ATS analysis, and track every application."
+            : "Your free plan includes one tailored CV per month, saved in History."}
         </p>
       </div>
+
+      <PlanBanner className="mb-6" />
 
       <div className="grid gap-6 lg:grid-cols-2">
         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
@@ -159,22 +196,39 @@ export function Dashboard() {
       </div>
 
       <div className="mt-6 flex flex-wrap gap-3">
-        <button
-          type="button"
-          onClick={() => void handleAnalyze()}
-          disabled={busy}
-          className="rounded-xl border border-olive-200 bg-olive-50 px-6 py-3 text-sm font-semibold text-olive-800 hover:bg-olive-100 disabled:opacity-50"
-        >
-          {analyzing ? "Analyzing…" : "Analyze ATS fit"}
-        </button>
+        {pro ? (
+          <button
+            type="button"
+            onClick={() => void handleAnalyze()}
+            disabled={busy}
+            className="rounded-xl border border-olive-200 bg-olive-50 px-6 py-3 text-sm font-semibold text-olive-800 hover:bg-olive-100 disabled:opacity-50"
+          >
+            {analyzing ? "Analyzing…" : "Analyze ATS fit"}
+          </button>
+        ) : (
+          <Link
+            to="/pricing"
+            className="rounded-xl border border-slate-200 bg-slate-50 px-6 py-3 text-sm font-semibold text-slate-500"
+          >
+            ATS analysis (Pro)
+          </Link>
+        )}
         <button
           type="button"
           onClick={() => void handleGenerate()}
-          disabled={busy}
+          disabled={busy || !allowTailor}
           className="rounded-xl bg-slate-900 px-6 py-3 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-50"
         >
           {generating ? "Generating…" : "Tailor my CV"}
         </button>
+        {!allowTailor && (
+          <Link
+            to="/pricing"
+            className="self-center text-sm font-medium text-olive-700 hover:underline"
+          >
+            Upgrade for more generations
+          </Link>
+        )}
       </div>
 
       {error && (
@@ -185,7 +239,7 @@ export function Dashboard() {
       {saveStatus && (
         <p className="mt-3 text-sm text-emerald-700">
           {saveStatus}
-          {trackerLink && (
+          {trackerLink && pro && (
             <>
               {" "}
               <Link to="/tracker" className="font-medium text-olive-800 underline">
@@ -193,15 +247,20 @@ export function Dashboard() {
               </Link>
             </>
           )}
+          {!pro && (
+            <>
+              {" "}
+              <Link to="/history" className="font-medium text-olive-800 underline">
+                View in history
+              </Link>
+            </>
+          )}
         </p>
       )}
 
-      {analysis && (
+      {analysis && pro && (
         <div className="mt-10 rounded-2xl border border-olive-200 bg-white p-6 shadow-sm">
           <h2 className="text-xl font-semibold text-slate-900">ATS analysis report</h2>
-          <p className="mt-1 text-sm text-slate-600">
-            Keyword scoring, ATS tips, missing skills, and resume feedback.
-          </p>
           <div className="mt-6">
             <AtsReport analysis={analysis} />
           </div>
@@ -236,4 +295,3 @@ export function Dashboard() {
     </div>
   );
 }
-

@@ -2,6 +2,13 @@ import type { IncomingMessage, ServerResponse } from "node:http";
 import type { Plugin } from "vite";
 import { loadEnv } from "vite";
 import { analyzeAts } from "./api/_lib/analyzeAts";
+import {
+  assertCanTailor,
+  assertProFeature,
+  BillingError,
+  recordTailorUsage,
+} from "./api/_lib/billing";
+import { getUserFromRequest } from "./api/_lib/auth";
 import { generateFollowUpDraft } from "./api/_lib/followUpDraft";
 import { generateTailoredCv } from "./api/_lib/generate";
 import { generateInterviewPrep } from "./api/_lib/interviewPrep";
@@ -38,6 +45,28 @@ const API_ROUTES = new Set([
   "/api/draft-follow-up",
 ]);
 
+async function requireUserId(req: IncomingMessage, env: Record<string, string>): Promise<string> {
+  const auth = req.headers.authorization;
+  const request = new Request("http://localhost", {
+    headers: auth ? { Authorization: auth } : {},
+  });
+
+  Object.assign(process.env, {
+    VITE_SUPABASE_URL: env.VITE_SUPABASE_URL || process.env.VITE_SUPABASE_URL,
+    VITE_SUPABASE_ANON_KEY: env.VITE_SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY,
+    SUPABASE_SERVICE_ROLE_KEY:
+      env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY,
+  });
+
+  const user = await getUserFromRequest(request);
+  if (!user) throw new BillingError("UNAUTHORIZED", "Sign in required");
+  return user.id;
+}
+
+function billingEnabled(env: Record<string, string>) {
+  return !!(env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY);
+}
+
 export function apiDevPlugin(): Plugin {
   return {
     name: "roleready-api-dev",
@@ -59,6 +88,8 @@ export function apiDevPlugin(): Plugin {
 
         try {
           const body = (await readJsonBody(req)) as Record<string, string>;
+          const userId = await requireUserId(req, env);
+          const enforceBilling = billingEnabled(env);
 
           if (url === "/api/parse-cv") {
             const text = await parsePdfFromBase64(body.pdfBase64);
@@ -67,12 +98,14 @@ export function apiDevPlugin(): Plugin {
           }
 
           if (url === "/api/analyze-ats") {
+            if (enforceBilling) await assertProFeature(userId, "ATS analysis");
             const analysis = await analyzeAts(body.cv, body.jobDesc, apiKey());
             sendJson(res, 200, { analysis });
             return;
           }
 
           if (url === "/api/interview-prep") {
+            if (enforceBilling) await assertProFeature(userId, "Interview prep");
             const prep = await generateInterviewPrep(
               body.cv,
               body.jobDesc,
@@ -84,6 +117,7 @@ export function apiDevPlugin(): Plugin {
           }
 
           if (url === "/api/draft-follow-up") {
+            if (enforceBilling) await assertProFeature(userId, "Follow-up drafts");
             const draft = await generateFollowUpDraft(
               body.cv,
               body.jobDesc,
@@ -96,9 +130,16 @@ export function apiDevPlugin(): Plugin {
             return;
           }
 
+          if (enforceBilling) await assertCanTailor(userId);
           const result = await generateTailoredCv(body.cv, body.jobDesc, apiKey());
+          if (enforceBilling) await recordTailorUsage(userId);
           sendJson(res, 200, { result });
         } catch (error) {
+          if (error instanceof BillingError) {
+            const status = error.code === "UPGRADE_REQUIRED" ? 402 : 401;
+            sendJson(res, status, { error: error.message, code: error.code });
+            return;
+          }
           const message = error instanceof Error ? error.message : "Request failed";
           const status =
             message.includes("required") || message.includes("pdfBase64")

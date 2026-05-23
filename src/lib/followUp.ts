@@ -1,4 +1,5 @@
 import type { FollowUpDraft } from "./types";
+import { apiPost } from "./apiClient";
 
 export async function fetchFollowUpDraft(input: {
   cv: string;
@@ -7,17 +8,7 @@ export async function fetchFollowUpDraft(input: {
   roleTitle: string;
   notes?: string;
 }): Promise<FollowUpDraft> {
-  const response = await fetch("/api/draft-follow-up", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(input),
-  });
-
-  const data = (await response.json()) as { draft?: FollowUpDraft; error?: string };
-
-  if (!response.ok) {
-    throw new Error(data.error || "Failed to draft follow-up");
-  }
+  const data = await apiPost<{ draft: FollowUpDraft }>("/api/draft-follow-up", input);
 
   if (!data.draft) {
     throw new Error("No follow-up draft returned");

@@ -6,6 +6,8 @@ import { Auth } from "./pages/Auth";
 import { Dashboard } from "./pages/Dashboard";
 import { History } from "./pages/History";
 import { Landing } from "./pages/Landing";
+import { ProRoute } from "./components/ProRoute";
+import { Pricing } from "./pages/Pricing";
 import { Tracker } from "./pages/Tracker";
 
 function App() {
@@ -17,6 +19,7 @@ function App() {
             <Route path="/" element={<Landing />} />
             <Route path="/login" element={<Auth mode="login" />} />
             <Route path="/signup" element={<Auth mode="signup" />} />
+            <Route path="/pricing" element={<Pricing />} />
             <Route
               path="/app"
               element={
@@ -29,7 +32,9 @@ function App() {
               path="/tracker"
               element={
                 <ProtectedRoute>
-                  <Tracker />
+                  <ProRoute>
+                    <Tracker />
+                  </ProRoute>
                 </ProtectedRoute>
               }
             />
