@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { Check } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import { startCheckout, openBillingPortal } from "../lib/billingClient";
 import { isPro } from "../lib/plan";
+import { fetchProPricing } from "../lib/pricingClient";
 
 const proFeatures = [
   "Unlimited CV tailoring",
@@ -24,9 +25,20 @@ export function Pricing() {
   const { user, profile, loading } = useAuth();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [proPrice, setProPrice] = useState<string | null>(null);
+  const [priceInterval, setPriceInterval] = useState("month");
   const [searchParams] = useSearchParams();
   const canceled = searchParams.get("checkout") === "canceled";
   const pro = isPro(profile);
+
+  useEffect(() => {
+    void fetchProPricing()
+      .then((p) => {
+        setProPrice(p.formatted);
+        setPriceInterval(p.interval);
+      })
+      .catch(() => setProPrice(null));
+  }, []);
 
   const handleSubscribe = async () => {
     if (!user) return;
@@ -98,7 +110,8 @@ export function Pricing() {
         <div className="rounded-2xl border-2 border-olive-500 bg-white p-8 shadow-md">
           <p className="text-sm font-semibold uppercase tracking-wide text-olive-700">Pro</p>
           <p className="mt-2 text-3xl font-bold text-slate-900">
-            €12<span className="text-base font-normal text-slate-500">/month</span>
+            {proPrice ?? "…"}
+            <span className="text-base font-normal text-slate-500">/{priceInterval}</span>
           </p>
           <ul className="mt-6 space-y-3 text-sm text-slate-700">
             {proFeatures.map((f) => (

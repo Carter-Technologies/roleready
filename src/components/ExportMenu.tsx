@@ -26,7 +26,7 @@ export function ExportMenu({ label, slug, text }: ExportMenuProps) {
     }
   };
 
-  const base = `roleready-${slug}`;
+  const base = `kigho-${slug}`;
 
   return (
     <div className="flex flex-wrap items-center gap-2">

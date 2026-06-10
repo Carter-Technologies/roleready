@@ -1,3 +1,5 @@
+import { APP_NAME, APP_URL } from "./appMeta";
+
 export type AtsAnalysisResult = {
   score: number;
   keywordScoring: {
@@ -97,8 +99,8 @@ export async function analyzeAts(
     headers: {
       Authorization: `Bearer ${apiKey}`,
       "Content-Type": "application/json",
-      "HTTP-Referer": "https://roleready.vercel.app",
-      "X-Title": "RoleReady",
+      "HTTP-Referer": APP_URL,
+      "X-Title": APP_NAME,
     },
     body: JSON.stringify({
       model: "openai/gpt-4o-mini",

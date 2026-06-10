@@ -13,6 +13,21 @@ import { generateFollowUpDraft } from "./api/_lib/followUpDraft";
 import { generateTailoredCv } from "./api/_lib/generate";
 import { generateInterviewPrep } from "./api/_lib/interviewPrep";
 import { parsePdfFromBase64 } from "./api/_lib/parsePdf";
+import { getStripe } from "./api/_lib/stripe";
+
+function formatPrice(amount: number, currency: string): string {
+  try {
+    return new Intl.NumberFormat(undefined, {
+      style: "currency",
+      currency: currency.toUpperCase(),
+      minimumFractionDigits: Number.isInteger(amount) ? 0 : 2,
+      maximumFractionDigits: 2,
+    }).format(amount);
+  } catch {
+    const symbol = currency.toLowerCase() === "eur" ? "€" : `${currency.toUpperCase()} `;
+    return `${symbol}${amount}`;
+  }
+}
 
 function readJsonBody(req: IncomingMessage): Promise<unknown> {
   return new Promise((resolve, reject) => {
@@ -76,6 +91,38 @@ export function apiDevPlugin(): Plugin {
 
       server.middlewares.use(async (req, res, next) => {
         const url = req.url?.split("?")[0];
+
+        if (url === "/api/pricing" && req.method === "GET") {
+          try {
+            Object.assign(process.env, {
+              STRIPE_SECRET_KEY: env.STRIPE_SECRET_KEY || process.env.STRIPE_SECRET_KEY,
+              STRIPE_PRICE_ID_PRO_MONTHLY:
+                env.STRIPE_PRICE_ID_PRO_MONTHLY || process.env.STRIPE_PRICE_ID_PRO_MONTHLY,
+            });
+            const priceId = process.env.STRIPE_PRICE_ID_PRO_MONTHLY?.trim();
+            if (!priceId?.startsWith("price_")) {
+              sendJson(res, 500, { error: "STRIPE_PRICE_ID_PRO_MONTHLY is not configured" });
+              return;
+            }
+            const stripe = getStripe();
+            const price = await stripe.prices.retrieve(priceId);
+            if (price.unit_amount == null) {
+              sendJson(res, 500, { error: "Price has no unit amount" });
+              return;
+            }
+            const amount = price.unit_amount / 100;
+            sendJson(res, 200, {
+              amount,
+              currency: price.currency,
+              interval: price.recurring?.interval ?? "month",
+              formatted: formatPrice(amount, price.currency),
+            });
+          } catch (error) {
+            const message = error instanceof Error ? error.message : "Failed to load pricing";
+            sendJson(res, 500, { error: message });
+          }
+          return;
+        }
 
         if (!url || !API_ROUTES.has(url)) {
           return next();
