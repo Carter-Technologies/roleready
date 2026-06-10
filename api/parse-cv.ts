@@ -2,8 +2,7 @@ import { parsePdfFromBase64 } from "./_lib/parsePdf";
 import { handleApiAuth } from "./_lib/withAuth";
 
 export const config = {
-  runtime: "nodejs",
-  maxDuration: 60,
+  runtime: "edge",
 };
 
 export default async function handler(request: Request) {
