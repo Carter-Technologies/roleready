@@ -31,7 +31,7 @@ export default async function handler(request: Request) {
     }
 
     const origin =
-      request.headers.get("origin") || process.env.VITE_APP_URL || "https://roleready.vercel.app";
+      request.headers.get("origin") || process.env.VITE_APP_URL || "https://www.kigho.com";
     const stripe = getStripe();
     const session = await stripe.billingPortal.sessions.create({
       customer: customerId,

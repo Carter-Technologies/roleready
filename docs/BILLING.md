@@ -17,28 +17,30 @@ Run `supabase/migrations/004_billing.sql` in the SQL Editor after V2–V4 migrat
 
 ## Stripe
 
-### Test mode (sandbox) — current production setup
+Production uses **Stripe Live mode** on `https://www.kigho.com`.
 
-RoleReady is configured for **Stripe Test mode** (Dashboard toggle: **Test mode** on).
+### Live mode (production)
 
-- Use **`sk_test_...`** for `STRIPE_SECRET_KEY` and a **test** Price ID (`price_...` from the test product).
-- Create the webhook in **test mode**; use that endpoint’s **`whsec_...`** for `STRIPE_WEBHOOK_SECRET`.
-- Checkout accepts [test cards](https://docs.stripe.com/testing#cards) only (e.g. `4242 4242 4242 4242`). No real charges.
-- When going live, swap Vercel env vars to **live** keys, a live Price ID, and a **live** webhook signing secret, then redeploy.
+- **`STRIPE_SECRET_KEY`** → `sk_live_...` (Vercel Production)
+- **`STRIPE_PRICE_ID_PRO_MONTHLY`** → live `price_...` (not `prod_...`)
+- **`STRIPE_WEBHOOK_SECRET`** → live `whsec_...` from the **live** webhook endpoint
+- Webhook URL: `https://www.kigho.com/api/stripe-webhook`
+- Events: `checkout.session.completed`, subscription **updated**, subscription **deleted**
+- **`VITE_APP_URL`** → `https://www.kigho.com` (checkout success/cancel redirects)
+
+Redeploy Vercel after changing any env var.
+
+### Test mode (local / sandbox)
+
+- Use **`sk_test_...`**, test `price_...`, and test `whsec_...` in local `.env` or Vercel Preview.
+- Test card: `4242 4242 4242 4242` — does **not** work in live mode.
 
 ### Setup
 
-1. Create a **Product** (e.g. RoleReady Pro) with a recurring **Price** (e.g. €12/month) in **Test mode**.
-2. Copy the **Price ID** (`price_...`) from the product’s pricing section → `STRIPE_PRICE_ID_PRO_MONTHLY`.  
-   Do **not** use the Product ID (`prod_...`) — Checkout will error with “No such price”.
-3. Add env vars in Vercel (and local `.env` for `vercel dev`):
-   - `STRIPE_SECRET_KEY` (`sk_test_...` while in sandbox)
-   - `STRIPE_WEBHOOK_SECRET` (from the **test** webhook endpoint)
-   - `STRIPE_PRICE_ID_PRO_MONTHLY`
-   - `SUPABASE_SERVICE_ROLE_KEY`
-4. Webhook endpoint: `https://your-app.vercel.app/api/stripe-webhook`
-   - Events: `checkout.session.completed`, `customer.subscription.updated`, `customer.subscription.deleted`
-5. Checkout success URL: `/app?checkout=success` (profile refresh on Dashboard).
+1. Create **Kigho Pro** with a recurring price in Stripe (test or live).
+2. Copy the **Price ID** (`price_...`) → `STRIPE_PRICE_ID_PRO_MONTHLY`.
+3. Vercel Production env: `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRICE_ID_PRO_MONTHLY`, `SUPABASE_SERVICE_ROLE_KEY`, `VITE_APP_URL`.
+4. Enable **Customer portal** in Stripe (Settings → Billing).
 
 ## Local dev
 
