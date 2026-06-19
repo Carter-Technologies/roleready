@@ -5,4 +5,7 @@ import { apiDevPlugin } from "./vite-plugin-api-dev";
 
 export default defineConfig(({ mode }) => ({
   plugins: [react(), tailwindcss(), mode === "development" ? apiDevPlugin() : undefined],
+  optimizeDeps: {
+    include: ["pdfjs-dist"],
+  },
 }));

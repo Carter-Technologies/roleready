@@ -1,3 +1,5 @@
+import { ensureBrowserPdfJs } from "./pdfJsBrowser";
+
 function cleanExtractedText(text: string | string[]): string {
   const cleaned = (Array.isArray(text) ? text.join("\n\n") : String(text)).trim();
   if (!cleaned) {
@@ -16,6 +18,8 @@ export async function extractTextFromPdf(file: File): Promise<string> {
   if (file.size > 10 * 1024 * 1024) {
     throw new Error("PDF must be under 10MB.");
   }
+
+  await ensureBrowserPdfJs();
 
   const bytes = new Uint8Array(await file.arrayBuffer());
   const { extractText, getDocumentProxy } = await import("unpdf");
