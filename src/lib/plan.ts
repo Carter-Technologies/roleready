@@ -29,7 +29,8 @@ export function currentUsageMonth() {
 }
 
 export function freeTailorRemaining(profile: Profile | null | undefined): number {
-  if (!profile || isPro(profile)) return Infinity;
+  if (!profile) return 0;
+  if (isPro(profile)) return Infinity;
   const month = currentUsageMonth();
   const used =
     profile.tailor_usage_month === month ? profile.tailor_usage_count : 0;
@@ -37,5 +38,6 @@ export function freeTailorRemaining(profile: Profile | null | undefined): number
 }
 
 export function canTailor(profile: Profile | null | undefined): boolean {
+  if (!profile) return true;
   return freeTailorRemaining(profile) > 0;
 }

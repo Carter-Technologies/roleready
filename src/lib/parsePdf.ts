@@ -1,18 +1,15 @@
-import { getAuthHeaders } from "./apiClient";
-
-function uint8ArrayToBase64(bytes: Uint8Array): string {
-  let binary = "";
-  const chunkSize = 0x8000;
-
-  for (let i = 0; i < bytes.length; i += chunkSize) {
-    binary += String.fromCharCode(...bytes.subarray(i, i + chunkSize));
+function cleanExtractedText(text: string | string[]): string {
+  const cleaned = (Array.isArray(text) ? text.join("\n\n") : String(text)).trim();
+  if (!cleaned) {
+    throw new Error("No text found in PDF. Try a text-based PDF or paste your CV manually.");
   }
-
-  return btoa(binary);
+  return cleaned;
 }
 
+/** Parse PDF in the browser — avoids Edge/serverless PDF.js issues on Vercel. */
 export async function extractTextFromPdf(file: File): Promise<string> {
-  if (file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf")) {
+  const name = file.name.toLowerCase();
+  if (file.type !== "application/pdf" && !name.endsWith(".pdf")) {
     throw new Error("Please upload a PDF file.");
   }
 
@@ -21,37 +18,20 @@ export async function extractTextFromPdf(file: File): Promise<string> {
   }
 
   const bytes = new Uint8Array(await file.arrayBuffer());
-  const pdfBase64 = uint8ArrayToBase64(bytes);
-
-  const response = await fetch("/api/parse-cv", {
-    method: "POST",
-    headers: await getAuthHeaders(),
-    body: JSON.stringify({ pdfBase64 }),
-  });
-
-  const data = (await response.json()) as { text?: string; error?: string };
-
-  if (!response.ok) {
-    throw new Error(
-      data.error || "Failed to parse PDF"
-    );
-  }
-
-  if (!data.text) {
-    throw new Error("No text returned from PDF parser.");
-  }
-
-  return data.text;
+  const { extractText, getDocumentProxy } = await import("unpdf");
+  const pdf = await getDocumentProxy(bytes);
+  const { text } = await extractText(pdf, { mergePages: true });
+  return cleanExtractedText(text);
 }
 
 export async function parseCvFile(file: File): Promise<string> {
   const name = file.name.toLowerCase();
 
-  if (name.endsWith(".pdf")) {
+  if (name.endsWith(".pdf") || file.type === "application/pdf") {
     return extractTextFromPdf(file);
   }
 
-  if (name.endsWith(".txt")) {
+  if (name.endsWith(".txt") || file.type === "text/plain") {
     return file.text();
   }
 

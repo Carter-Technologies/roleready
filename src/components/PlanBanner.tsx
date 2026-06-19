@@ -10,6 +10,10 @@ export function PlanBanner({ className = "" }: PlanBannerProps) {
   const { profile } = useAuth();
   const pro = isPro(profile);
 
+  if (!profile) {
+    return null;
+  }
+
   if (pro) {
     return (
       <div
