@@ -26,6 +26,7 @@ export async function extractTextFromPdf(file: File): Promise<string> {
     data: bytes,
     useSystemFonts: true,
     isEvalSupported: false,
+    disableFontFace: false,
   }).promise;
 
   try {
@@ -41,7 +42,7 @@ export async function extractTextFromPdf(file: File): Promise<string> {
     }
     return cleanExtractedText(parts.join("\n\n"));
   } finally {
-    await doc.destroy();
+    void doc.destroy();
   }
 }
 
