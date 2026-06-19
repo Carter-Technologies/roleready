@@ -27,6 +27,8 @@ export function Pricing() {
   const [error, setError] = useState("");
   const [proPrice, setProPrice] = useState<string | null>(null);
   const [priceInterval, setPriceInterval] = useState("month");
+  const [priceLoading, setPriceLoading] = useState(true);
+  const [priceError, setPriceError] = useState("");
   const [searchParams] = useSearchParams();
   const canceled = searchParams.get("checkout") === "canceled";
   const pro = isPro(profile);
@@ -36,8 +38,18 @@ export function Pricing() {
       .then((p) => {
         setProPrice(p.formatted);
         setPriceInterval(p.interval);
+        setPriceError("");
       })
-      .catch(() => setProPrice(null));
+      .catch((err: unknown) => {
+        setProPrice(null);
+        const msg = err instanceof Error ? err.message : "Failed to load price";
+        setPriceError(
+          msg.includes("No such price")
+            ? "Price unavailable — check Stripe price ID matches live mode."
+            : msg
+        );
+      })
+      .finally(() => setPriceLoading(false));
   }, []);
 
   const handleSubscribe = async () => {
@@ -110,9 +122,14 @@ export function Pricing() {
         <div className="rounded-2xl border-2 border-olive-500 bg-white p-8 shadow-md">
           <p className="text-sm font-semibold uppercase tracking-wide text-olive-700">Pro</p>
           <p className="mt-2 text-3xl font-bold text-slate-900">
-            {proPrice ?? "…"}
-            <span className="text-base font-normal text-slate-500">/{priceInterval}</span>
+            {priceLoading ? "…" : (proPrice ?? "—")}
+            {!priceLoading && proPrice && (
+              <span className="text-base font-normal text-slate-500">/{priceInterval}</span>
+            )}
           </p>
+          {priceError && (
+            <p className="mt-2 text-sm text-amber-700">{priceError}</p>
+          )}
           <ul className="mt-6 space-y-3 text-sm text-slate-700">
             {proFeatures.map((f) => (
               <li key={f} className="flex gap-2">
