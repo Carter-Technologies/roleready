@@ -22,9 +22,9 @@ export function Layout() {
             <img
               src="/logo.png"
               alt="Kigho"
-              className="h-11 w-auto sm:h-12 md:h-14"
-              width={211}
-              height={141}
+              className="h-16 w-auto sm:h-[4.5rem] md:h-20"
+              width={301}
+              height={201}
             />
           </Link>
 
