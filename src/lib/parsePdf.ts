@@ -1,14 +1,14 @@
-import { ensureBrowserPdfJs } from "./pdfJsBrowser";
+import { getPdfJs } from "./pdfJsBrowser";
 
-function cleanExtractedText(text: string | string[]): string {
-  const cleaned = (Array.isArray(text) ? text.join("\n\n") : String(text)).trim();
+function cleanExtractedText(text: string): string {
+  const cleaned = text.trim();
   if (!cleaned) {
     throw new Error("No text found in PDF. Try a text-based PDF or paste your CV manually.");
   }
   return cleaned;
 }
 
-/** Parse PDF in the browser — avoids Edge/serverless PDF.js issues on Vercel. */
+/** Parse PDF in the browser. */
 export async function extractTextFromPdf(file: File): Promise<string> {
   const name = file.name.toLowerCase();
   if (file.type !== "application/pdf" && !name.endsWith(".pdf")) {
@@ -19,13 +19,30 @@ export async function extractTextFromPdf(file: File): Promise<string> {
     throw new Error("PDF must be under 10MB.");
   }
 
-  await ensureBrowserPdfJs();
-
+  const pdfjs = await getPdfJs();
   const bytes = new Uint8Array(await file.arrayBuffer());
-  const { extractText, getDocumentProxy } = await import("unpdf");
-  const pdf = await getDocumentProxy(bytes);
-  const { text } = await extractText(pdf, { mergePages: true });
-  return cleanExtractedText(text);
+
+  const doc = await pdfjs.getDocument({
+    data: bytes,
+    useSystemFonts: true,
+    isEvalSupported: false,
+  }).promise;
+
+  try {
+    const parts: string[] = [];
+    for (let pageNum = 1; pageNum <= doc.numPages; pageNum++) {
+      const page = await doc.getPage(pageNum);
+      const content = await page.getTextContent();
+      const pageText = content.items
+        .map((item) => ("str" in item && item.str ? item.str : ""))
+        .filter(Boolean)
+        .join(" ");
+      if (pageText) parts.push(pageText);
+    }
+    return cleanExtractedText(parts.join("\n\n"));
+  } finally {
+    await doc.destroy();
+  }
 }
 
 export async function parseCvFile(file: File): Promise<string> {

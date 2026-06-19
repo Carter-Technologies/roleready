@@ -1,26 +1,44 @@
-let initPromise: Promise<void> | null = null;
+type PdfJs = typeof import("pdfjs-dist");
 
-/** Use official pdfjs-dist in the browser — unpdf's serverless bundle breaks under Vite production minify. */
-export async function ensureBrowserPdfJs() {
-  if (initPromise) return initPromise;
+let pdfjsModule: PdfJs | null = null;
 
-  initPromise = (async () => {
-    const [{ definePDFJSModule }, workerModule] = await Promise.all([
-      import("unpdf"),
-      import("pdfjs-dist/build/pdf.worker.min.mjs?url"),
-    ]);
-
-    const workerSrc =
-      typeof workerModule === "object" && workerModule && "default" in workerModule
-        ? String(workerModule.default)
-        : String(workerModule);
-
-    await definePDFJSModule(async () => {
-      const pdfjs = await import("pdfjs-dist");
-      pdfjs.GlobalWorkerOptions.workerSrc = workerSrc;
-      return pdfjs;
+function polyfillPromiseWithResolvers() {
+  const promiseCtor = Promise as PromiseConstructor & {
+    withResolvers?: <T>() => {
+      promise: Promise<T>;
+      resolve: (value: T | PromiseLike<T>) => void;
+      reject: (reason?: unknown) => void;
+    };
+  };
+  if (typeof promiseCtor.withResolvers === "function") return;
+  promiseCtor.withResolvers = function withResolvers<T>() {
+    let resolve!: (value: T | PromiseLike<T>) => void;
+    let reject!: (reason?: unknown) => void;
+    const promise = new Promise<T>((res, rej) => {
+      resolve = res;
+      reject = rej;
     });
-  })();
+    return { promise, resolve, reject };
+  };
+}
 
-  return initPromise;
+/** Load pdfjs-dist with worker — no unpdf layer (avoids Vite minify issues). */
+export async function getPdfJs(): Promise<PdfJs> {
+  if (pdfjsModule) return pdfjsModule;
+
+  polyfillPromiseWithResolvers();
+
+  const [pdfjs, workerModule] = await Promise.all([
+    import("pdfjs-dist"),
+    import("pdfjs-dist/build/pdf.worker.min.mjs?url"),
+  ]);
+
+  const workerSrc =
+    typeof workerModule === "object" && workerModule && "default" in workerModule
+      ? String(workerModule.default)
+      : String(workerModule);
+
+  pdfjs.GlobalWorkerOptions.workerSrc = workerSrc;
+  pdfjsModule = pdfjs;
+  return pdfjs;
 }

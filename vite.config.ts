@@ -8,4 +8,7 @@ export default defineConfig(({ mode }) => ({
   optimizeDeps: {
     include: ["pdfjs-dist"],
   },
+  build: {
+    target: "es2020",
+  },
 }));
