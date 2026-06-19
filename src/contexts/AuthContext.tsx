@@ -19,6 +19,8 @@ type AuthContextValue = {
   loading: boolean;
   signUp: (email: string, password: string, fullName?: string) => Promise<string | null>;
   signIn: (email: string, password: string) => Promise<string | null>;
+  resetPasswordForEmail: (email: string) => Promise<string | null>;
+  updatePassword: (password: string) => Promise<string | null>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
 };
@@ -96,6 +98,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return error?.message ?? null;
   }, []);
 
+  const resetPasswordForEmail = useCallback(async (email: string) => {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    return error?.message ?? null;
+  }, []);
+
+  const updatePassword = useCallback(async (password: string) => {
+    const { error } = await supabase.auth.updateUser({ password });
+    return error?.message ?? null;
+  }, []);
+
   const signOut = useCallback(async () => {
     await supabase.auth.signOut();
     setProfile(null);
@@ -109,10 +123,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       loading,
       signUp,
       signIn,
+      resetPasswordForEmail,
+      updatePassword,
       signOut,
       refreshProfile,
     }),
-    [user, session, profile, loading, signUp, signIn, signOut, refreshProfile]
+    [
+      user,
+      session,
+      profile,
+      loading,
+      signUp,
+      signIn,
+      resetPasswordForEmail,
+      updatePassword,
+      signOut,
+      refreshProfile,
+    ]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -85,7 +85,17 @@ export function Auth({ mode }: { mode: AuthMode }) {
         </div>
 
         <div>
-          <label className="text-sm font-medium text-slate-700">Password</label>
+          <div className="flex items-center justify-between">
+            <label className="text-sm font-medium text-slate-700">Password</label>
+            {mode === "login" && (
+              <Link
+                to="/forgot-password"
+                className="text-sm font-medium text-olive-700 hover:underline"
+              >
+                Forgot password?
+              </Link>
+            )}
+          </div>
           <input
             type="password"
             required
