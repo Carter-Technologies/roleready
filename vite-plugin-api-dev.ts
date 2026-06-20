@@ -89,8 +89,11 @@ export function apiDevPlugin(): Plugin {
       const env = loadEnv(server.config.mode, process.cwd(), "");
       const apiKey = () => env.OPENROUTER_API_KEY || process.env.OPENROUTER_API_KEY || "";
       const siteLocked = () => {
-        const v = env.SITE_LOCKED ?? env.VITE_SITE_LOCKED ?? process.env.SITE_LOCKED ?? process.env.VITE_SITE_LOCKED;
-        return v === "true" || v === "1";
+        const live = env.VITE_SITE_LIVE ?? env.SITE_LIVE ?? process.env.VITE_SITE_LIVE ?? process.env.SITE_LIVE;
+        if (live === "true" || live === "1") return false;
+        const locked = env.SITE_LOCKED ?? env.VITE_SITE_LOCKED ?? process.env.SITE_LOCKED ?? process.env.VITE_SITE_LOCKED;
+        if (locked === "true" || locked === "1") return true;
+        return false;
       };
 
       server.middlewares.use(async (req, res, next) => {
