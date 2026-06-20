@@ -1,6 +1,7 @@
 import type Stripe from "stripe";
 import { setUserFree, setUserPro } from "./_lib/billing";
 import { getStripe } from "./_lib/stripe";
+import { isSiteLocked, siteLockedResponse } from "./_lib/siteLock";
 
 export const config = {
   runtime: "edge",
@@ -27,6 +28,7 @@ export default async function handler(request: Request) {
   if (request.method !== "POST") {
     return Response.json({ error: "Method not allowed" }, { status: 405 });
   }
+  if (isSiteLocked()) return siteLockedResponse();
 
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
   if (!webhookSecret) {

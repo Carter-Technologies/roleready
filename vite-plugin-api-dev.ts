@@ -88,9 +88,18 @@ export function apiDevPlugin(): Plugin {
     configureServer(server) {
       const env = loadEnv(server.config.mode, process.cwd(), "");
       const apiKey = () => env.OPENROUTER_API_KEY || process.env.OPENROUTER_API_KEY || "";
+      const siteLocked = () => {
+        const v = env.SITE_LOCKED ?? env.VITE_SITE_LOCKED ?? process.env.SITE_LOCKED ?? process.env.VITE_SITE_LOCKED;
+        return v === "true" || v === "1";
+      };
 
       server.middlewares.use(async (req, res, next) => {
         const url = req.url?.split("?")[0];
+
+        if (url?.startsWith("/api/") && siteLocked()) {
+          sendJson(res, 503, { error: "Site temporarily unavailable" });
+          return;
+        }
 
         if (url === "/api/pricing" && req.method === "GET") {
           try {

@@ -2,6 +2,7 @@ import { getUserFromRequest } from "./_lib/auth";
 import { BillingError, billingErrorResponse } from "./_lib/billing";
 import { getSupabaseAdmin } from "./_lib/supabaseAdmin";
 import { getStripe } from "./_lib/stripe";
+import { isSiteLocked, siteLockedResponse } from "./_lib/siteLock";
 
 export const config = {
   runtime: "edge",
@@ -17,6 +18,7 @@ export default async function handler(request: Request) {
   if (request.method !== "POST") {
     return Response.json({ error: "Method not allowed" }, { status: 405 });
   }
+  if (isSiteLocked()) return siteLockedResponse();
 
   try {
     const user = await getUserFromRequest(request);

@@ -1,4 +1,5 @@
 import { getStripe } from "./_lib/stripe";
+import { isSiteLocked, siteLockedResponse } from "./_lib/siteLock";
 
 export const config = {
   runtime: "edge",
@@ -22,6 +23,7 @@ export default async function handler(request: Request) {
   if (request.method !== "GET") {
     return Response.json({ error: "Method not allowed" }, { status: 405 });
   }
+  if (isSiteLocked()) return siteLockedResponse();
 
   try {
     const priceId = process.env.STRIPE_PRICE_ID_PRO_MONTHLY?.trim().replace(/^["']|["']$/g, "");

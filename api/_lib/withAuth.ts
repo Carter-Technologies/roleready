@@ -1,5 +1,6 @@
 import { getUserFromRequest } from "./auth";
 import { BillingError, billingErrorResponse } from "./billing";
+import { isSiteLocked, siteLockedResponse } from "./siteLock";
 
 export async function requireAuth(request: Request) {
   const user = await getUserFromRequest(request);
@@ -14,6 +15,8 @@ export async function handleApiAuth<T>(
   handler: (userId: string) => Promise<T>
 ): Promise<Response> {
   try {
+    if (isSiteLocked()) return siteLockedResponse();
+
     const user = await requireAuth(request);
     const result = await handler(user.id);
     return result instanceof Response ? result : Response.json(result);
