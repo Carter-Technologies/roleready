@@ -42,9 +42,6 @@ export function Landing() {
     <div>
       <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24">
         <div className="mx-auto max-w-3xl text-center">
-          <p className="mb-4 inline-block rounded-full bg-olive-100 px-4 py-1 text-sm font-medium text-olive-800">
-            V4 — Track, prep, and apply
-          </p>
           <h1 className="text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl">
             Apply faster. Get interviews.
           </h1>

@@ -97,8 +97,7 @@ export function Tracker() {
     <div className="mx-auto max-w-[1400px] px-4 py-8 sm:px-6">
       <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="text-sm font-medium text-olive-700">V4 — Job tracker</p>
-          <h1 className="mt-1 text-3xl font-bold text-slate-900">Applications</h1>
+          <h1 className="text-3xl font-bold text-slate-900">Applications</h1>
           <p className="mt-2 text-slate-600">
             Track every role from wishlist to offer. Open a card for interview prep and follow-ups.
           </p>
