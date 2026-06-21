@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { LegalList, LegalPage, LegalSection } from "../../components/legal/LegalPage";
 import { LEGAL_EMAIL } from "../../lib/legalMeta";
 
@@ -111,12 +112,42 @@ export function Privacy() {
         <p>These providers only process data as needed to provide their services to Copperfield.</p>
       </LegalSection>
 
-      <LegalSection title="6. Data Retention">
+      <LegalSection title="6. Data Retention and Deletion">
         <p>
           We retain personal data only for as long as necessary to provide Kigho, comply with legal
           obligations, resolve disputes, and enforce our agreements.
         </p>
-        <p>Users may request deletion of their account and associated data.</p>
+        <p className="font-medium text-slate-800">Delete your account in Kigho</p>
+        <p>
+          You can permanently delete your account and associated data at any time from your account
+          settings:
+        </p>
+        <ol className="list-decimal space-y-2 pl-5">
+          <li>Log in to Kigho.</li>
+          <li>
+            Open{" "}
+            <Link to="/settings" className="font-medium text-olive-700 hover:underline">
+              Account settings
+            </Link>
+            .
+          </li>
+          <li>
+            In &ldquo;Delete your account&rdquo;, type <strong>DELETE</strong> and confirm.
+          </li>
+        </ol>
+        <p>This removes your profile, saved CVs, generation history, and job tracker data.</p>
+        <p>
+          If you have an active Pro subscription, it will be cancelled as part of account deletion.
+        </p>
+        <p className="font-medium text-slate-800">Request deletion by email</p>
+        <p>
+          Alternatively, email{" "}
+          <a href={`mailto:${LEGAL_EMAIL}`} className="font-medium text-olive-700 hover:underline">
+            {LEGAL_EMAIL}
+          </a>{" "}
+          from your account email with the subject line &ldquo;Delete my account&rdquo;. We will
+          verify your request and complete deletion within 30 days.
+        </p>
       </LegalSection>
 
       <LegalSection title="7. Your Rights">
@@ -135,7 +166,7 @@ export function Privacy() {
             "Withdraw consent where processing is based on consent",
           ]}
         />
-        <p>To exercise these rights, contact us using the details below.</p>
+        <p>To exercise these rights, use Account settings to delete your data or contact us using the details below.</p>
       </LegalSection>
 
       <LegalSection title="8. Security">

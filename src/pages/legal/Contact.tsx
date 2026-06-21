@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { LegalPage, LegalSection } from "../../components/legal/LegalPage";
 import { LEGAL_EMAIL } from "../../lib/legalMeta";
 
@@ -19,6 +20,34 @@ export function Contact() {
           <a href={`mailto:${LEGAL_EMAIL}`} className="font-medium text-olive-700 hover:underline">
             {LEGAL_EMAIL}
           </a>
+        </p>
+      </LegalSection>
+
+      <LegalSection title="Delete your account">
+        <p>
+          The fastest way to delete your Kigho account and all associated data is in the app:
+        </p>
+        <ol className="list-decimal space-y-2 pl-5">
+          <li>Log in to Kigho.</li>
+          <li>
+            Go to{" "}
+            <Link to="/settings" className="font-medium text-olive-700 hover:underline">
+              Account settings
+            </Link>
+            .
+          </li>
+          <li>
+            Type <strong>DELETE</strong> in the confirmation field and select &ldquo;Delete my
+            account permanently&rdquo;.
+          </li>
+        </ol>
+        <p>
+          You can also email{" "}
+          <a href={`mailto:${LEGAL_EMAIL}`} className="font-medium text-olive-700 hover:underline">
+            {LEGAL_EMAIL}
+          </a>{" "}
+          with the subject line &ldquo;Delete my account&rdquo; from the email address linked to
+          your Kigho account.
         </p>
       </LegalSection>
 

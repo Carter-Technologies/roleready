@@ -54,6 +54,12 @@ export function Layout() {
                   History
                 </Link>
                 <Link
+                  to="/settings"
+                  className={navLinkClass(location.pathname === "/settings")}
+                >
+                  Account
+                </Link>
+                <Link
                   to="/pricing"
                   className={
                     pro

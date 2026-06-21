@@ -14,6 +14,7 @@ import { generateTailoredCv } from "./api/_lib/generate";
 import { generateInterviewPrep } from "./api/_lib/interviewPrep";
 import { parsePdfFromBase64 } from "./api/_lib/parsePdf";
 import { getStripe } from "./api/_lib/stripe";
+import { deleteUserAccount } from "./api/_lib/deleteAccount";
 
 function formatPrice(amount: number, currency: string): string {
   try {
@@ -131,6 +132,37 @@ export function apiDevPlugin(): Plugin {
             });
           } catch (error) {
             const message = error instanceof Error ? error.message : "Failed to load pricing";
+            sendJson(res, 500, { error: message });
+          }
+          return;
+        }
+
+        if (url === "/api/delete-account" && req.method === "POST") {
+          try {
+            if (!billingEnabled(env)) {
+              sendJson(res, 500, { error: "SUPABASE_SERVICE_ROLE_KEY is required for account deletion" });
+              return;
+            }
+            Object.assign(process.env, {
+              VITE_SUPABASE_URL: env.VITE_SUPABASE_URL || process.env.VITE_SUPABASE_URL,
+              SUPABASE_SERVICE_ROLE_KEY:
+                env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY,
+              STRIPE_SECRET_KEY: env.STRIPE_SECRET_KEY || process.env.STRIPE_SECRET_KEY,
+            });
+            const userId = await requireUserId(req, env);
+            const body = (await readJsonBody(req)) as { confirm?: string };
+            if (body.confirm !== "DELETE") {
+              sendJson(res, 400, { error: 'Type "DELETE" to confirm account deletion' });
+              return;
+            }
+            await deleteUserAccount(userId);
+            sendJson(res, 200, { ok: true });
+          } catch (error) {
+            if (error instanceof BillingError) {
+              sendJson(res, 401, { error: error.message, code: error.code });
+              return;
+            }
+            const message = error instanceof Error ? error.message : "Account deletion failed";
             sendJson(res, 500, { error: message });
           }
           return;

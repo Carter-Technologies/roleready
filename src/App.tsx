@@ -13,6 +13,7 @@ import { Landing } from "./pages/Landing";
 import { ProRoute } from "./components/ProRoute";
 import { Pricing } from "./pages/Pricing";
 import { Tracker } from "./pages/Tracker";
+import { Settings } from "./pages/Settings";
 import { Contact } from "./pages/legal/Contact";
 import { Privacy } from "./pages/legal/Privacy";
 import { Refunds } from "./pages/legal/Refunds";
@@ -64,6 +65,14 @@ function AppRoutes() {
           element={
             <ProtectedRoute>
               <History />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/settings"
+          element={
+            <ProtectedRoute>
+              <Settings />
             </ProtectedRoute>
           }
         />

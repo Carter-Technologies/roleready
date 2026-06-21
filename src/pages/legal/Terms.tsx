@@ -139,8 +139,20 @@ export function Terms() {
 
       <LegalSection title="10. Termination">
         <p>
-          You may stop using Kigho at any time. We may suspend or terminate access if you breach
-          these Terms or if required for legal, security, or operational reasons.
+          You may stop using Kigho at any time. You can permanently delete your account and data
+          from{" "}
+          <Link to="/settings" className="font-medium text-olive-700 hover:underline">
+            Account settings
+          </Link>{" "}
+          or by contacting us at{" "}
+          <a href={`mailto:${LEGAL_EMAIL}`} className="font-medium text-olive-700 hover:underline">
+            {LEGAL_EMAIL}
+          </a>
+          .
+        </p>
+        <p>
+          We may suspend or terminate access if you breach these Terms or if required for legal,
+          security, or operational reasons.
         </p>
         <p>
           Upon termination, your right to use the service ends. Provisions that by their nature
