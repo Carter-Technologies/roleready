@@ -2,6 +2,7 @@ import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import { Layout } from "./components/Layout";
 import { ProtectedRoute } from "./components/ProtectedRoute";
+import { LegalShell } from "./components/legal/LegalShell";
 import { Auth } from "./pages/Auth";
 import { ForgotPassword } from "./pages/ForgotPassword";
 import { ResetPassword } from "./pages/ResetPassword";
@@ -12,7 +13,22 @@ import { Landing } from "./pages/Landing";
 import { ProRoute } from "./components/ProRoute";
 import { Pricing } from "./pages/Pricing";
 import { Tracker } from "./pages/Tracker";
+import { Contact } from "./pages/legal/Contact";
+import { Privacy } from "./pages/legal/Privacy";
+import { Refunds } from "./pages/legal/Refunds";
+import { Terms } from "./pages/legal/Terms";
 import { isSiteLocked } from "./lib/siteLock";
+
+function LegalRoutes() {
+  return (
+    <>
+      <Route path="/privacy" element={<Privacy />} />
+      <Route path="/terms" element={<Terms />} />
+      <Route path="/contact" element={<Contact />} />
+      <Route path="/refunds" element={<Refunds />} />
+    </>
+  );
+}
 
 function AppRoutes() {
   return (
@@ -24,6 +40,7 @@ function AppRoutes() {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/pricing" element={<Pricing />} />
+        <LegalRoutes />
         <Route
           path="/app"
           element={
@@ -56,13 +73,22 @@ function AppRoutes() {
   );
 }
 
+function LockedRoutes() {
+  return (
+    <Routes>
+      <Route element={<LegalShell />}>
+        <LegalRoutes />
+      </Route>
+      <Route path="*" element={<ComingSoon />} />
+    </Routes>
+  );
+}
+
 function App() {
   if (isSiteLocked()) {
     return (
       <BrowserRouter>
-        <Routes>
-          <Route path="*" element={<ComingSoon />} />
-        </Routes>
+        <LockedRoutes />
       </BrowserRouter>
     );
   }

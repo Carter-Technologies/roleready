@@ -1,6 +1,7 @@
 import { Link, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { isPro } from "../lib/plan";
+import { SiteFooter } from "./SiteFooter";
 
 const navLinkClass = (active: boolean) =>
   `rounded-lg px-3 py-2 text-sm font-medium transition ${
@@ -15,7 +16,7 @@ export function Layout() {
   const pro = isPro(profile);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
+    <div className="flex min-h-screen flex-col bg-gradient-to-b from-slate-50 to-white">
       <header className="border-b border-slate-200/80 bg-white/80 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-4 sm:px-6">
           <Link to={user ? "/app" : "/"} className="flex items-center gap-2">
@@ -93,7 +94,11 @@ export function Layout() {
         </div>
       </header>
 
-      <Outlet />
+      <main className="flex-1">
+        <Outlet />
+      </main>
+
+      <SiteFooter />
     </div>
   );
 }
