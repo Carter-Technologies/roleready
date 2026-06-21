@@ -130,6 +130,9 @@ export function Pricing() {
           {priceError && (
             <p className="mt-2 text-sm text-amber-700">{priceError}</p>
           )}
+          <p className="mt-3 text-sm font-medium text-olive-800">
+            First 1,000 members get Pro free for life.
+          </p>
           <ul className="mt-6 space-y-3 text-sm text-slate-700">
             {proFeatures.map((f) => (
               <li key={f} className="flex gap-2">
