@@ -19,7 +19,7 @@ import { Refunds } from "./pages/legal/Refunds";
 import { Terms } from "./pages/legal/Terms";
 import { isSiteLocked } from "./lib/siteLock";
 
-function LegalRoutes() {
+function legalRoutes() {
   return (
     <>
       <Route path="/privacy" element={<Privacy />} />
@@ -40,7 +40,7 @@ function AppRoutes() {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/pricing" element={<Pricing />} />
-        <LegalRoutes />
+        {legalRoutes()}
         <Route
           path="/app"
           element={
@@ -76,9 +76,7 @@ function AppRoutes() {
 function LockedRoutes() {
   return (
     <Routes>
-      <Route element={<LegalShell />}>
-        <LegalRoutes />
-      </Route>
+      <Route element={<LegalShell />}>{legalRoutes()}</Route>
       <Route path="*" element={<ComingSoon />} />
     </Routes>
   );
