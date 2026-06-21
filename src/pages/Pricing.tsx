@@ -131,7 +131,7 @@ export function Pricing() {
             <p className="mt-2 text-sm text-amber-700">{priceError}</p>
           )}
           <p className="mt-3 text-sm font-medium text-olive-800">
-            First 1,000 members get Pro for €10/month for life.
+            First 1,000 members get Pro for €10/month.
           </p>
           <ul className="mt-6 space-y-3 text-sm text-slate-700">
             {proFeatures.map((f) => (
