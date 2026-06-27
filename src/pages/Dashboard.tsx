@@ -7,6 +7,7 @@ import { ExportMenu } from "../components/ExportMenu";
 import { PlanBanner } from "../components/PlanBanner";
 import { analyzeAts } from "../lib/analyzeAts";
 import { generateCV } from "../lib/generateCV";
+import { syncSubscription } from "../lib/billingClient";
 import { createApplicationFromGeneration } from "../lib/applications";
 import { saveGeneration, updateMasterCv } from "../lib/history";
 import { parseJobDescription } from "../lib/jobMeta";
@@ -41,9 +42,16 @@ export function Dashboard() {
 
   useEffect(() => {
     if (searchParams.get("checkout") === "success") {
-      void refreshProfile();
-      setSaveStatus("Welcome to Pro! Your plan is now active.");
-      setSearchParams({}, { replace: true });
+      void (async () => {
+        try {
+          await syncSubscription();
+        } catch {
+          // Webhook may have already updated; refresh profile either way.
+        }
+        await refreshProfile();
+        setSaveStatus("Welcome to Pro! Your plan is now active.");
+        setSearchParams({}, { replace: true });
+      })();
     }
   }, [searchParams, refreshProfile, setSearchParams]);
 

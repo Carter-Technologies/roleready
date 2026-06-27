@@ -15,6 +15,7 @@ import { generateInterviewPrep } from "./api/_lib/interviewPrep";
 import { parsePdfFromBase64 } from "./api/_lib/parsePdf";
 import { getStripe } from "./api/_lib/stripe";
 import { deleteUserAccount } from "./api/_lib/deleteAccount";
+import { syncUserSubscription } from "./api/_lib/syncSubscription";
 
 function formatPrice(amount: number, currency: string): string {
   try {
@@ -132,6 +133,32 @@ export function apiDevPlugin(): Plugin {
             });
           } catch (error) {
             const message = error instanceof Error ? error.message : "Failed to load pricing";
+            sendJson(res, 500, { error: message });
+          }
+          return;
+        }
+
+        if (url === "/api/sync-subscription" && req.method === "POST") {
+          try {
+            if (!billingEnabled(env)) {
+              sendJson(res, 500, { error: "SUPABASE_SERVICE_ROLE_KEY is required for billing sync" });
+              return;
+            }
+            Object.assign(process.env, {
+              VITE_SUPABASE_URL: env.VITE_SUPABASE_URL || process.env.VITE_SUPABASE_URL,
+              SUPABASE_SERVICE_ROLE_KEY:
+                env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY,
+              STRIPE_SECRET_KEY: env.STRIPE_SECRET_KEY || process.env.STRIPE_SECRET_KEY,
+            });
+            const userId = await requireUserId(req, env);
+            const result = await syncUserSubscription(userId);
+            sendJson(res, 200, result);
+          } catch (error) {
+            if (error instanceof BillingError) {
+              sendJson(res, 401, { error: error.message, code: error.code });
+              return;
+            }
+            const message = error instanceof Error ? error.message : "Billing sync failed";
             sendJson(res, 500, { error: message });
           }
           return;

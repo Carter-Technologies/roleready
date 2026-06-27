@@ -4,12 +4,14 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
 import type { Session, User } from "@supabase/supabase-js";
+import { syncSubscription } from "../lib/billingClient";
 import { supabase } from "../lib/supabase";
-import { normalizeProfile } from "../lib/plan";
+import { isPro, normalizeProfile } from "../lib/plan";
 import type { Profile } from "../lib/types";
 
 type AuthContextValue = {
@@ -32,6 +34,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  const billingSyncedRef = useRef<string | null>(null);
 
   const loadProfile = useCallback(async (userId: string) => {
     const { data, error } = await supabase
@@ -76,8 +79,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       void loadProfile(user.id);
     } else {
       setProfile(null);
+      billingSyncedRef.current = null;
     }
   }, [user, loadProfile]);
+
+  useEffect(() => {
+    if (!user || !profile || isPro(profile)) return;
+    if (billingSyncedRef.current === user.id) return;
+    if (!profile.stripe_customer_id && !profile.email) return;
+
+    billingSyncedRef.current = user.id;
+    void (async () => {
+      try {
+        await syncSubscription();
+        await loadProfile(user.id);
+      } catch (err) {
+        console.warn("Billing sync failed:", err);
+        billingSyncedRef.current = null;
+      }
+    })();
+  }, [user, profile, loadProfile]);
 
   const signUp = useCallback(
     async (email: string, password: string, fullName?: string) => {

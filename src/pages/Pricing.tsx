@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { Check } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
-import { startCheckout, openBillingPortal } from "../lib/billingClient";
+import { startCheckout, openBillingPortal, syncSubscription } from "../lib/billingClient";
 import { isPro } from "../lib/plan";
 import { fetchProPricing } from "../lib/pricingClient";
 
@@ -22,7 +22,7 @@ const freeFeatures = [
 ];
 
 export function Pricing() {
-  const { user, profile, loading } = useAuth();
+  const { user, profile, loading, refreshProfile } = useAuth();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [proPrice, setProPrice] = useState<string | null>(null);
@@ -75,6 +75,20 @@ export function Pricing() {
       window.location.href = url;
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not open billing portal");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleRestorePro = async () => {
+    if (!user) return;
+    setBusy(true);
+    setError("");
+    try {
+      await syncSubscription();
+      await refreshProfile();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not restore Pro access");
     } finally {
       setBusy(false);
     }
@@ -167,6 +181,16 @@ export function Pricing() {
             >
               Sign up to subscribe
             </Link>
+          )}
+          {user && !pro && (
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => void handleRestorePro()}
+              className="mt-4 w-full text-center text-sm font-medium text-olive-700 hover:underline disabled:opacity-50"
+            >
+              Already paid? Restore Pro access
+            </button>
           )}
         </div>
       </div>
