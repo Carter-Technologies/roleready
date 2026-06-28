@@ -64,3 +64,21 @@ npm run build
 ```
 
 Should match what Vercel deploys from `main`.
+
+## Local Pro account (testing)
+
+Sign up once in the app, then grant Pro without Stripe:
+
+```bash
+node scripts/grant-pro.mjs you@email.com
+```
+
+Revert to free:
+
+```bash
+node scripts/grant-pro.mjs you@email.com --free
+```
+
+Uses `SUPABASE_SERVICE_ROLE_KEY` from `.env`. **If `.env` points at production Supabase, this upgrades that real account** — use a test email or staging project when possible.
+
+After granting, refresh the app or sign out/in. Tracker, ATS, and unlimited tailoring should unlock.
