@@ -8,7 +8,7 @@ import {
 } from "docx";
 import type { FormattedCv } from "./formattedCvTypes";
 
-const OLIVE = "556330";
+const HEADING_COLOR = "000000";
 const BODY_SIZE = 22; // half-points → 11pt
 const NAME_SIZE = 32;
 const HEADLINE_SIZE = 24;
@@ -28,14 +28,14 @@ function sectionHeading(title: string): Paragraph {
   return new Paragraph({
     spacing: { before: 280, after: 120 },
     border: {
-      bottom: { color: "D3DDB8", size: 6, style: BorderStyle.SINGLE, space: 4 },
+      bottom: { color: "CBD5E1", size: 6, style: BorderStyle.SINGLE, space: 4 },
     },
     children: [
       new TextRun({
         text: title.toUpperCase(),
         bold: true,
         size: 22,
-        color: OLIVE,
+        color: HEADING_COLOR,
         font: "Calibri",
       }),
     ],
