@@ -13,6 +13,11 @@ export type FormattedCvEducation = {
   details?: string;
 };
 
+export type FormattedCvSkillGroup = {
+  category: string;
+  items: string[];
+};
+
 export type FormattedCv = {
   name: string;
   headline?: string;
@@ -26,6 +31,6 @@ export type FormattedCv = {
   summary?: string;
   experience: FormattedCvExperience[];
   education: FormattedCvEducation[];
-  skills: string[];
+  skills: FormattedCvSkillGroup[];
   certifications?: string[];
 };

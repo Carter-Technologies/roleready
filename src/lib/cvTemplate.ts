@@ -175,7 +175,36 @@ export async function buildFormattedCvDocx(cv: FormattedCv): Promise<Blob> {
 
   if (cv.skills.length > 0) {
     children.push(sectionHeading("Skills"));
-    children.push(bodyParagraph(cv.skills.join(" • ")));
+    for (const group of cv.skills) {
+      const detail = group.items.join(", ");
+      children.push(
+        new Paragraph({
+          spacing: { after: 100 },
+          children: detail
+            ? [
+                new TextRun({
+                  text: `${group.category}: `,
+                  bold: true,
+                  size: BODY_SIZE,
+                  font: "Calibri",
+                }),
+                new TextRun({
+                  text: detail,
+                  size: BODY_SIZE,
+                  font: "Calibri",
+                }),
+              ]
+            : [
+                new TextRun({
+                  text: group.category,
+                  bold: true,
+                  size: BODY_SIZE,
+                  font: "Calibri",
+                }),
+              ],
+        })
+      );
+    }
   }
 
   if (cv.certifications && cv.certifications.length > 0) {

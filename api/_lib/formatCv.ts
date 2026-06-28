@@ -15,6 +15,11 @@ export type FormattedCvEducation = {
   details?: string;
 };
 
+export type FormattedCvSkillGroup = {
+  category: string;
+  items: string[];
+};
+
 export type FormattedCv = {
   name: string;
   headline?: string;
@@ -28,7 +33,7 @@ export type FormattedCv = {
   summary?: string;
   experience: FormattedCvExperience[];
   education: FormattedCvEducation[];
-  skills: string[];
+  skills: FormattedCvSkillGroup[];
   certifications?: string[];
 };
 
@@ -65,14 +70,20 @@ Return ONLY valid JSON (no markdown) matching this schema:
       "details": "<optional honors, GPA, etc>"
     }
   ],
-  "skills": ["<skill>", "..."],
+  "skills": [
+    {
+      "category": "<capability area, e.g. Product ownership>",
+      "items": ["<tool or method>", "<tool or method>"]
+    }
+  ],
   "certifications": ["<optional certification>"]
 }
 
 Rules:
 - Preserve facts from the CV text only. Do not invent employers, dates, or credentials.
 - Each experience entry should have 2-5 strong bullet points when available in the source.
-- skills: 8-20 concise items.
+- skills: 4-8 groups. Each group has a category (capability or domain) and items (tools, methods, technologies, or techniques shown in the CV for that area). Example: category "Product ownership", items ["Jira", "Scrum", "Agile methodologies", "Requirements gathering"].
+- Do not list skills as a flat array of single words. Group related items under a meaningful category from the CV.
 - If a section is missing in the source, use an empty array (not null).
 - name is required.`;
 
@@ -83,6 +94,37 @@ function asString(value: unknown): string {
 function asStringArray(value: unknown): string[] {
   if (!Array.isArray(value)) return [];
   return value.map((item) => String(item).trim()).filter(Boolean);
+}
+
+function normalizeSkills(value: unknown): FormattedCvSkillGroup[] {
+  if (!Array.isArray(value) || value.length === 0) return [];
+
+  if (typeof value[0] === "object" && value[0] !== null) {
+    return value
+      .map((item) => {
+        const row = item as Record<string, unknown>;
+        return {
+          category: asString(row.category),
+          items: asStringArray(row.items),
+        };
+      })
+      .filter((row) => row.category);
+  }
+
+  return asStringArray(value).map((entry) => {
+    const colon = entry.indexOf(":");
+    if (colon > 0) {
+      return {
+        category: entry.slice(0, colon).trim(),
+        items: entry
+          .slice(colon + 1)
+          .split(",")
+          .map((part) => part.trim())
+          .filter(Boolean),
+      };
+    }
+    return { category: entry, items: [] };
+  });
 }
 
 export function normalizeFormattedCv(raw: unknown): FormattedCv {
@@ -133,7 +175,7 @@ export function normalizeFormattedCv(raw: unknown): FormattedCv {
     summary: asString(o.summary) || undefined,
     experience,
     education,
-    skills: asStringArray(o.skills),
+    skills: normalizeSkills(o.skills),
     certifications: asStringArray(o.certifications),
   };
 }
