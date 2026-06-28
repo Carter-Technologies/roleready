@@ -10,7 +10,6 @@ import {
 } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { syncSubscription } from "../lib/billingClient";
-import { authCallbackUrl } from "../lib/appUrl";
 import { supabase } from "../lib/supabase";
 import { isPro, normalizeProfile } from "../lib/plan";
 import type { Profile } from "../lib/types";
@@ -107,7 +106,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         email,
         password,
         options: {
-          emailRedirectTo: authCallbackUrl("/app?welcome=1"),
           data: fullName ? { full_name: fullName } : undefined,
         },
       });
@@ -123,7 +121,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const resetPasswordForEmail = useCallback(async (email: string) => {
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: authCallbackUrl("/reset-password"),
+      redirectTo: `${window.location.origin}/reset-password`,
     });
     return error?.message ?? null;
   }, []);

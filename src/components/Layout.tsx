@@ -40,9 +40,17 @@ export function Layout() {
 
   return (
     <div className="flex min-h-screen flex-col bg-gradient-to-b from-slate-50 to-white">
-      <header className="relative border-b border-slate-200/80 bg-white/80 backdrop-blur">
+      <header
+        className={`sticky top-0 z-50 border-b border-slate-200/80 md:relative ${
+          menuOpen ? "bg-white" : "bg-white/80 backdrop-blur"
+        }`}
+      >
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:px-6 sm:py-4">
-          <Link to={user ? "/app" : "/"} className="flex shrink-0 items-center gap-2">
+          <Link
+            to={user ? "/app" : "/"}
+            className="flex shrink-0 items-center gap-2"
+            onClick={() => setMenuOpen(false)}
+          >
             <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-olive-600 text-sm font-bold text-white">
               K
             </span>
@@ -116,67 +124,56 @@ export function Layout() {
           </button>
         </div>
 
-        {/* Mobile menu panel */}
+        {/* Mobile menu panel — solid white, no overlay */}
         {menuOpen && (
-          <>
-            <button
-              type="button"
-              className="fixed inset-0 z-40 bg-slate-900/20 md:hidden"
-              aria-label="Close menu"
-              onClick={() => setMenuOpen(false)}
-            />
-            <nav className="relative z-50 border-t border-slate-200 bg-white px-4 py-3 md:hidden">
-              {user ? (
-                <div className="space-y-1">
-                  {(profile?.full_name || profile?.email) && (
-                    <p className="px-3 pb-2 text-sm text-slate-500">
-                      {profile?.full_name || profile?.email}
-                    </p>
-                  )}
-                  <Link to="/app" className={navLinkClass(location.pathname === "/app")}>
-                    Tailor
-                  </Link>
-                  <Link to={trackerPath} className={navLinkClass(location.pathname === trackerPath)}>
-                    Tracker
-                  </Link>
-                  <Link to="/history" className={navLinkClass(location.pathname === "/history")}>
-                    History
-                  </Link>
-                  <Link to="/settings" className={navLinkClass(location.pathname === "/settings")}>
-                    Account
-                  </Link>
-                  <Link
-                    to="/pricing"
-                    className={navLinkClass(location.pathname === "/pricing")}
-                  >
-                    {pro ? "Billing" : "Upgrade to Pro"}
-                  </Link>
-                  <button
-                    type="button"
-                    onClick={() => void signOut()}
-                    className="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2.5 text-left text-sm font-medium text-slate-700 hover:bg-slate-50"
-                  >
-                    Sign out
-                  </button>
-                </div>
-              ) : (
-                <div className="space-y-1">
-                  <Link to="/pricing" className={navLinkClass(location.pathname === "/pricing")}>
-                    Pricing
-                  </Link>
-                  <Link to="/login" className={navLinkClass(location.pathname === "/login")}>
-                    Log in
-                  </Link>
-                  <Link
-                    to="/signup"
-                    className="block rounded-lg bg-olive-600 px-3 py-2.5 text-center text-sm font-medium text-white hover:bg-olive-700"
-                  >
-                    Get started
-                  </Link>
-                </div>
-              )}
-            </nav>
-          </>
+          <nav className="border-t border-slate-200 bg-white px-4 py-3 md:hidden">
+            {user ? (
+              <div className="space-y-1">
+                {(profile?.full_name || profile?.email) && (
+                  <p className="px-3 pb-2 text-sm text-slate-500">
+                    {profile?.full_name || profile?.email}
+                  </p>
+                )}
+                <Link to="/app" className={navLinkClass(location.pathname === "/app")}>
+                  Tailor
+                </Link>
+                <Link to={trackerPath} className={navLinkClass(location.pathname === trackerPath)}>
+                  Tracker
+                </Link>
+                <Link to="/history" className={navLinkClass(location.pathname === "/history")}>
+                  History
+                </Link>
+                <Link to="/settings" className={navLinkClass(location.pathname === "/settings")}>
+                  Account
+                </Link>
+                <Link to="/pricing" className={navLinkClass(location.pathname === "/pricing")}>
+                  {pro ? "Billing" : "Upgrade to Pro"}
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => void signOut()}
+                  className="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2.5 text-left text-sm font-medium text-slate-700 hover:bg-slate-50"
+                >
+                  Sign out
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-1">
+                <Link to="/pricing" className={navLinkClass(location.pathname === "/pricing")}>
+                  Pricing
+                </Link>
+                <Link to="/login" className={navLinkClass(location.pathname === "/login")}>
+                  Log in
+                </Link>
+                <Link
+                  to="/signup"
+                  className="block rounded-lg bg-olive-600 px-3 py-2.5 text-center text-sm font-medium text-white hover:bg-olive-700"
+                >
+                  Get started
+                </Link>
+              </div>
+            )}
+          </nav>
         )}
       </header>
 

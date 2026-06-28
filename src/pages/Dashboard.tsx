@@ -53,14 +53,6 @@ export function Dashboard() {
         setSearchParams({}, { replace: true });
       })();
     }
-    if (searchParams.get("welcome") === "1") {
-      setSaveStatus("Welcome to Kigho! Your email is confirmed — you're all set.");
-      setSearchParams({}, { replace: true });
-    }
-    if (searchParams.get("passwordUpdated") === "1") {
-      setSaveStatus("Your password has been updated.");
-      setSearchParams({}, { replace: true });
-    }
   }, [searchParams, refreshProfile, setSearchParams]);
 
   const handleSaveMaster = async () => {

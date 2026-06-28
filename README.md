@@ -27,9 +27,8 @@ AI-powered job application platform — tailor your CV and cover letter to any j
    - `supabase/migrations/002_v3_ats.sql`
    - `supabase/migrations/003_v4_tracker.sql`
    - `supabase/migrations/004_billing.sql` (paywall)
-3. Under **Authentication → Providers**, enable Email.
-4. Under **Authentication → URL Configuration**, set Site URL to `https://www.kigho.com` and add redirect URLs (see `supabase/email-templates/README.md`).
-5. Copy **Project URL** and **anon key** into `.env`:
+3. Under **Authentication → Providers**, enable Email. For local dev you may disable “Confirm email” under Email settings.
+4. Copy **Project URL** and **anon key** into `.env`:
 
 ```env
 VITE_SUPABASE_URL=https://xxx.supabase.co

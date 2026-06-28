@@ -122,7 +122,7 @@ export function Settings() {
             value={confirmText}
             onChange={(e) => setConfirmText(e.target.value)}
             autoComplete="off"
-            className="mt-1 w-full rounded-xl border border-red-200 bg-white px-4 py-3 text-sm text-slate-900 focus:border-red-400 focus:outline-none focus:ring-2 focus:ring-red-100"
+            className="mt-1 w-full rounded-xl border border-red-200 bg-white px-4 py-3 text-base text-slate-900 focus:border-red-400 focus:outline-none focus:ring-2 focus:ring-red-100"
             placeholder="DELETE"
           />
         </label>

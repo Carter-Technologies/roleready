@@ -1,7 +1,6 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
-import { supabase } from "../lib/supabase";
 
 export function ResetPassword() {
   const { user, loading, updatePassword } = useAuth();
@@ -10,33 +9,6 @@ export function ResetPassword() {
   const [confirm, setConfirm] = useState("");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [sessionReady, setSessionReady] = useState(false);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
-      if (session && (event === "PASSWORD_RECOVERY" || event === "SIGNED_IN" || event === "INITIAL_SESSION")) {
-        if (!cancelled) setSessionReady(true);
-      }
-    });
-
-    void supabase.auth.getSession().then(({ data }) => {
-      if (data.session && !cancelled) setSessionReady(true);
-    });
-
-    const timeout = window.setTimeout(() => {
-      if (!cancelled) setSessionReady(true);
-    }, 2500);
-
-    return () => {
-      cancelled = true;
-      subscription.unsubscribe();
-      window.clearTimeout(timeout);
-    };
-  }, []);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -60,10 +32,10 @@ export function ResetPassword() {
       return;
     }
 
-    navigate("/app?passwordUpdated=1", { replace: true });
+    navigate("/app", { replace: true, state: { passwordReset: true } });
   };
 
-  if (loading || !sessionReady) {
+  if (loading) {
     return (
       <div className="mx-auto max-w-md px-4 py-16 text-center text-sm text-slate-600 sm:px-6">
         Loading…
@@ -101,7 +73,7 @@ export function ResetPassword() {
             minLength={6}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-olive-400 focus:outline-none focus:ring-2 focus:ring-olive-100"
+            className="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3 text-base focus:border-olive-400 focus:outline-none focus:ring-2 focus:ring-olive-100"
             placeholder="••••••••"
           />
         </div>
@@ -114,7 +86,7 @@ export function ResetPassword() {
             minLength={6}
             value={confirm}
             onChange={(e) => setConfirm(e.target.value)}
-            className="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-olive-400 focus:outline-none focus:ring-2 focus:ring-olive-100"
+            className="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3 text-base focus:border-olive-400 focus:outline-none focus:ring-2 focus:ring-olive-100"
             placeholder="••••••••"
           />
         </div>

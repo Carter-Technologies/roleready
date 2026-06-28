@@ -1,31 +1,21 @@
 import { useState, type FormEvent } from "react";
-import { Link, Navigate, useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 
 type AuthMode = "login" | "signup";
-
-function formatAuthError(message: string, mode: AuthMode): string {
-  const lower = message.toLowerCase();
-  if (mode === "login" && (lower.includes("email not confirmed") || lower.includes("not verified"))) {
-    return "Please confirm your email before logging in. Check your inbox for the confirmation link we sent when you signed up.";
-  }
-  return message;
-}
 
 export function Auth({ mode }: { mode: AuthMode }) {
   const { user, signIn, signUp } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const [searchParams] = useSearchParams();
   const from = (location.state as { from?: string } | null)?.from ?? "/app";
-  const emailConfirmed = searchParams.get("confirmed") === "1";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [error, setError] = useState("");
-  const [signupComplete, setSignupComplete] = useState(false);
+  const [info, setInfo] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   if (user) {
@@ -35,6 +25,7 @@ export function Auth({ mode }: { mode: AuthMode }) {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError("");
+    setInfo("");
 
     if (mode === "signup" && !agreedToTerms) {
       setError("Please agree to the Terms of Service and Privacy Policy to continue.");
@@ -51,47 +42,17 @@ export function Auth({ mode }: { mode: AuthMode }) {
     setSubmitting(false);
 
     if (message) {
-      setError(formatAuthError(message, mode));
+      setError(message);
       return;
     }
 
     if (mode === "signup") {
-      setSignupComplete(true);
+      setInfo("Check your email to confirm your account, then log in.");
       return;
     }
 
     navigate(from, { replace: true });
   };
-
-  if (mode === "signup" && signupComplete) {
-    return (
-      <div className="mx-auto max-w-md px-4 py-16 sm:px-6">
-        <div className="rounded-2xl border border-olive-200 bg-olive-50/60 p-8 text-center">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-olive-600 text-lg font-bold text-white">
-            ✉
-          </div>
-          <h1 className="mt-6 text-2xl font-bold text-slate-900">Confirm your email</h1>
-          <p className="mt-3 text-slate-600">
-            We&apos;ve sent a confirmation link to{" "}
-            <strong className="font-medium text-slate-900">{email}</strong>.
-          </p>
-          <p className="mt-3 text-sm leading-relaxed text-slate-600">
-            Click the link in that email to activate your account. You&apos;ll be brought back to
-            Kigho automatically — then you can log in and start tailoring applications.
-          </p>
-          <p className="mt-4 text-sm text-slate-500">
-            Didn&apos;t get it? Check spam, or wait a minute and try signing up again.
-          </p>
-          <Link
-            to="/login"
-            className="mt-8 inline-block rounded-xl bg-olive-600 px-6 py-3 text-sm font-semibold text-white hover:bg-olive-700"
-          >
-            Go to log in
-          </Link>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="mx-auto max-w-md px-4 py-16 sm:px-6">
@@ -104,19 +65,6 @@ export function Auth({ mode }: { mode: AuthMode }) {
           : "Start tailoring applications in seconds."}
       </p>
 
-      {mode === "signup" && (
-        <p className="mt-4 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
-          You&apos;ll need to <strong className="font-medium text-slate-800">confirm your email</strong>{" "}
-          before you can log in. We&apos;ll send you a link right after sign-up.
-        </p>
-      )}
-
-      {mode === "login" && emailConfirmed && (
-        <p className="mt-4 rounded-xl border border-olive-200 bg-olive-50 px-4 py-3 text-sm text-olive-900">
-          Your email is confirmed. Log in to continue.
-        </p>
-      )}
-
       <form onSubmit={(e) => void handleSubmit(e)} className="mt-8 space-y-4">
         {mode === "signup" && (
           <div>
@@ -125,7 +73,7 @@ export function Auth({ mode }: { mode: AuthMode }) {
               type="text"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
-              className="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-olive-400 focus:outline-none focus:ring-2 focus:ring-olive-100"
+              className="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3 text-base focus:border-olive-400 focus:outline-none focus:ring-2 focus:ring-olive-100"
               placeholder="Jane Smith"
             />
           </div>
@@ -138,7 +86,7 @@ export function Auth({ mode }: { mode: AuthMode }) {
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-olive-400 focus:outline-none focus:ring-2 focus:ring-olive-100"
+            className="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3 text-base focus:border-olive-400 focus:outline-none focus:ring-2 focus:ring-olive-100"
             placeholder="you@email.com"
           />
         </div>
@@ -161,7 +109,7 @@ export function Auth({ mode }: { mode: AuthMode }) {
             minLength={6}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-olive-400 focus:outline-none focus:ring-2 focus:ring-olive-100"
+            className="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3 text-base focus:border-olive-400 focus:outline-none focus:ring-2 focus:ring-olive-100"
             placeholder="••••••••"
           />
         </div>
@@ -193,6 +141,7 @@ export function Auth({ mode }: { mode: AuthMode }) {
             {error}
           </p>
         )}
+        {info && <p className="text-sm text-emerald-700">{info}</p>}
 
         <button
           type="submit"
