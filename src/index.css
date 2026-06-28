@@ -16,6 +16,13 @@ body {
   margin: 0;
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
+  -webkit-text-size-adjust: 100%;
+  overflow-x: hidden;
+}
+
+html {
+  touch-action: manipulation;
+  overflow-x: hidden;
 }
 
 #root {

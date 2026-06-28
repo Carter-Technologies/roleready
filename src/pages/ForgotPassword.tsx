@@ -30,7 +30,8 @@ export function ForgotPassword() {
     <div className="mx-auto max-w-md px-4 py-16 sm:px-6">
       <h1 className="text-2xl font-bold text-slate-900">Reset your password</h1>
       <p className="mt-2 text-slate-600">
-        Enter your email and we&apos;ll send you a link to choose a new password.
+        Enter your email and we&apos;ll send you a link to choose a new password. The link will
+        bring you back to Kigho to set a new password.
       </p>
 
       <form onSubmit={(e) => void handleSubmit(e)} className="mt-8 space-y-4">

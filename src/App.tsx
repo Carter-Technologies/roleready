@@ -5,6 +5,7 @@ import { ProtectedRoute } from "./components/ProtectedRoute";
 import { LegalShell } from "./components/legal/LegalShell";
 import { Auth } from "./pages/Auth";
 import { ForgotPassword } from "./pages/ForgotPassword";
+import { AuthCallback } from "./pages/AuthCallback";
 import { ResetPassword } from "./pages/ResetPassword";
 import { ComingSoon } from "./pages/ComingSoon";
 import { Dashboard } from "./pages/Dashboard";
@@ -38,6 +39,7 @@ function AppRoutes() {
         <Route path="/" element={<Landing />} />
         <Route path="/login" element={<Auth mode="login" />} />
         <Route path="/signup" element={<Auth mode="signup" />} />
+        <Route path="/auth/callback" element={<AuthCallback />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/pricing" element={<Pricing />} />
