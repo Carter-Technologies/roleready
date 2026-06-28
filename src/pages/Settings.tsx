@@ -58,25 +58,25 @@ export function Settings() {
   };
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-10 sm:px-6 sm:py-14">
-      <h1 className="text-3xl font-bold tracking-tight text-slate-900">Account settings</h1>
+    <div className="mx-auto max-w-2xl px-4 py-8 pb-12 sm:px-6 sm:py-14">
+      <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">Account settings</h1>
       <p className="mt-2 text-slate-600">Manage your Kigho account, billing, and data.</p>
 
-      <section className="mt-10 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <section className="mt-8 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:mt-10 sm:p-6">
         <h2 className="text-lg font-semibold text-slate-900">Your account</h2>
-        <dl className="mt-4 space-y-2 text-sm">
-          <div className="flex gap-2">
-            <dt className="font-medium text-slate-500">Email</dt>
-            <dd className="text-slate-800">{user?.email ?? profile?.email ?? "—"}</dd>
+        <dl className="mt-4 space-y-3 text-sm">
+          <div className="flex flex-col gap-0.5 sm:flex-row sm:gap-2">
+            <dt className="shrink-0 font-medium text-slate-500">Email</dt>
+            <dd className="break-all text-slate-800">{user?.email ?? profile?.email ?? "—"}</dd>
           </div>
           {profile?.full_name && (
-            <div className="flex gap-2">
-              <dt className="font-medium text-slate-500">Name</dt>
+            <div className="flex flex-col gap-0.5 sm:flex-row sm:gap-2">
+              <dt className="shrink-0 font-medium text-slate-500">Name</dt>
               <dd className="text-slate-800">{profile.full_name}</dd>
             </div>
           )}
-          <div className="flex gap-2">
-            <dt className="font-medium text-slate-500">Plan</dt>
+          <div className="flex flex-col gap-0.5 sm:flex-row sm:gap-2">
+            <dt className="shrink-0 font-medium text-slate-500">Plan</dt>
             <dd className="text-slate-800">{pro ? "Pro" : "Free"}</dd>
           </div>
         </dl>
@@ -92,7 +92,7 @@ export function Settings() {
         )}
       </section>
 
-      <section className="mt-8 rounded-2xl border border-red-200 bg-red-50/50 p-6">
+      <section className="mt-6 rounded-2xl border border-red-200 bg-red-50/50 p-5 sm:mt-8 sm:p-6">
         <h2 className="text-lg font-semibold text-red-900">Delete your account</h2>
         <p className="mt-2 text-sm leading-relaxed text-red-900/80">
           Permanently delete your Kigho account and all associated data, including:
