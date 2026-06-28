@@ -80,10 +80,13 @@ Return ONLY valid JSON (no markdown) matching this schema:
 }
 
 Rules:
-- Preserve facts from the CV text only. Do not invent employers, dates, or credentials.
-- Each experience entry should have 2-5 strong bullet points when available in the source.
+- Preserve facts from the CV text only. Do not invent employers, dates, credentials, or achievements.
+- experience: each role should have at least 3 bullet points when the source CV provides enough detail. Use fewer only if the source genuinely lacks content — never pad with invented achievements.
+- Keep bullets concise (one line each). Prioritise the most recent and relevant roles.
+- The formatted CV must fit within 2 pages when rendered in Word: use a 2-3 sentence summary, include the most recent roles first (typically 3-5 roles), and avoid overly long sections. Omit older or less relevant detail if needed to stay within 2 pages.
 - skills: 4-8 groups. Each group has a category (capability or domain) and items (tools, methods, technologies, or techniques shown in the CV for that area). Example: category "Product ownership", items ["Jira", "Scrum", "Agile methodologies", "Requirements gathering"].
 - Do not list skills as a flat array of single words. Group related items under a meaningful category from the CV.
+- Do not include a references section in the JSON (it is added automatically).
 - If a section is missing in the source, use an empty array (not null).
 - name is required.`;
 
@@ -127,6 +130,35 @@ function normalizeSkills(value: unknown): FormattedCvSkillGroup[] {
   });
 }
 
+const MAX_EXPERIENCE_ROLES = 5;
+const MAX_BULLETS_PER_ROLE = 4;
+const MAX_SUMMARY_CHARS = 520;
+const MAX_SKILL_GROUPS = 6;
+const MAX_ITEMS_PER_SKILL = 6;
+
+/** Trim content so typical Word render stays within ~2 pages. */
+function trimForTwoPages(cv: FormattedCv): FormattedCv {
+  let summary = cv.summary;
+  if (summary && summary.length > MAX_SUMMARY_CHARS) {
+    summary = `${summary.slice(0, MAX_SUMMARY_CHARS).replace(/\s+\S*$/, "")}…`;
+  }
+
+  return {
+    ...cv,
+    summary,
+    experience: cv.experience.slice(0, MAX_EXPERIENCE_ROLES).map((role) => ({
+      ...role,
+      bullets: role.bullets.slice(0, MAX_BULLETS_PER_ROLE),
+    })),
+    education: cv.education.slice(0, 3),
+    skills: cv.skills.slice(0, MAX_SKILL_GROUPS).map((group) => ({
+      ...group,
+      items: group.items.slice(0, MAX_ITEMS_PER_SKILL),
+    })),
+    certifications: cv.certifications?.slice(0, 4),
+  };
+}
+
 export function normalizeFormattedCv(raw: unknown): FormattedCv {
   const o = raw as Record<string, unknown>;
   const contact = (o.contact ?? {}) as Record<string, unknown>;
@@ -162,7 +194,7 @@ export function normalizeFormattedCv(raw: unknown): FormattedCv {
 
   const name = asString(o.name) || "CV";
 
-  return {
+  return trimForTwoPages({
     name,
     headline: asString(o.headline) || undefined,
     contact: {
@@ -177,7 +209,7 @@ export function normalizeFormattedCv(raw: unknown): FormattedCv {
     education,
     skills: normalizeSkills(o.skills),
     certifications: asStringArray(o.certifications),
-  };
+  });
 }
 
 export async function structureTailoredCv(

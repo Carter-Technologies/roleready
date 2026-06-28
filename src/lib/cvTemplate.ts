@@ -214,6 +214,9 @@ export async function buildFormattedCvDocx(cv: FormattedCv): Promise<Blob> {
     }
   }
 
+  children.push(sectionHeading("References"));
+  children.push(bodyParagraph("Available upon request", { spacingAfter: 0 }));
+
   const doc = new Document({
     sections: [
       {
