@@ -54,7 +54,7 @@ export function ExportMenu({ label, slug, text }: ExportMenuProps) {
       <button
         type="button"
         onClick={() => void run(() => downloadDocx(`${base}.docx`, label, text))}
-        className="rounded-lg bg-olive-600 px-3 py-2 text-sm font-medium text-white hover:bg-olive-700"
+        className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-800 hover:bg-slate-50"
       >
         DOCX
       </button>

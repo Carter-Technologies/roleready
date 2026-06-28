@@ -1,4 +1,5 @@
 import { APP_NAME, APP_URL } from "./appMeta";
+import { applyIrishSpelling } from "./irishSpelling";
 
 export type FormattedCvExperience = {
   title: string;
@@ -80,8 +81,9 @@ Return ONLY valid JSON (no markdown) matching this schema:
 }
 
 Rules:
+- Use Irish English spelling throughout (e.g. organisation, colour, prioritise, specialise, centre, programme, labour, recognise, analyse, honour, travelled, behaviour). Never use American spellings.
 - Preserve facts from the CV text only. Do not invent employers, dates, credentials, or achievements.
-- experience: each role should have at least 3 bullet points when the source CV provides enough detail. Use fewer only if the source genuinely lacks content — never pad with invented achievements.
+- experience: each role MUST have at least 3 bullet points when the source CV provides enough detail. Include every relevant bullet from the source for that role; split long bullets into separate points if needed. Use fewer than 3 only if the source genuinely has fewer — never pad with invented achievements.
 - Keep bullets concise (one line each). Prioritise the most recent and relevant roles.
 - The formatted CV must fit within 2 pages when rendered in Word: use a 2-3 sentence summary, include the most recent roles first (typically 3-5 roles), and avoid overly long sections. Omit older or less relevant detail if needed to stay within 2 pages.
 - skills: 4-8 groups. Each group has a category (capability or domain) and items (tools, methods, technologies, or techniques shown in the CV for that area). Example: category "Product ownership", items ["Jira", "Scrum", "Agile methodologies", "Requirements gathering"].
@@ -130,11 +132,131 @@ function normalizeSkills(value: unknown): FormattedCvSkillGroup[] {
   });
 }
 
+const MIN_BULLETS_PER_ROLE = 3;
 const MAX_EXPERIENCE_ROLES = 5;
 const MAX_BULLETS_PER_ROLE = 4;
 const MAX_SUMMARY_CHARS = 520;
 const MAX_SKILL_GROUPS = 6;
 const MAX_ITEMS_PER_SKILL = 6;
+
+function normalizeKey(value: string): string {
+  return value.toLowerCase().replace(/[^a-z0-9]/g, "");
+}
+
+function splitCompoundBullet(bullet: string): string[] {
+  const trimmed = bullet.trim();
+  if (!trimmed) return [];
+
+  const bySemicolon = trimmed.split(/;\s*/).map((part) => part.trim()).filter(Boolean);
+  if (bySemicolon.length > 1) return bySemicolon;
+
+  if (trimmed.length > 100 && /\.\s+/.test(trimmed)) {
+    const sentences = trimmed.split(/\.\s+/).map((part) => part.trim()).filter(Boolean);
+    if (sentences.length > 1) {
+      return sentences.map((part, index) =>
+        index < sentences.length - 1 && !/[.!?]$/.test(part) ? `${part}.` : part
+      );
+    }
+  }
+
+  return [trimmed];
+}
+
+function expandBullets(bullets: string[]): string[] {
+  return bullets.flatMap(splitCompoundBullet);
+}
+
+function findRoleSectionBullets(
+  tailoredCv: string,
+  company: string,
+  title: string
+): string[] {
+  const lines = tailoredCv.split("\n");
+  const companyKey = normalizeKey(company);
+  const titleKey = normalizeKey(title);
+
+  let startIdx = -1;
+  for (let i = 0; i < lines.length; i++) {
+    const lineKey = normalizeKey(lines[i]);
+    if ((companyKey && lineKey.includes(companyKey)) || (titleKey && lineKey.includes(titleKey))) {
+      startIdx = i;
+      break;
+    }
+  }
+
+  if (startIdx < 0) return [];
+
+  const bullets: string[] = [];
+  for (let i = startIdx + 1; i < lines.length; i++) {
+    const line = lines[i];
+    const bulletMatch = line.match(/^[\s]*[•\-*–—]\s*(.+)$/);
+    if (bulletMatch) {
+      bullets.push(bulletMatch[1].trim());
+      continue;
+    }
+
+    if (bullets.length === 0) continue;
+
+    const trimmed = line.trim();
+    if (!trimmed) continue;
+
+    const looksLikeNextRole =
+      /\d{4}/.test(trimmed) &&
+      (trimmed.includes("|") || trimmed.includes("–") || trimmed.includes("—"));
+    if (looksLikeNextRole) break;
+
+    if (/^(experience|education|skills|certifications|references)\b/i.test(trimmed)) break;
+  }
+
+  return bullets;
+}
+
+function bulletAlreadyIncluded(candidate: string, existing: string[]): boolean {
+  const key = normalizeKey(candidate);
+  return existing.some((bullet) => {
+    const existingKey = normalizeKey(bullet);
+    return existingKey === key || existingKey.includes(key) || key.includes(existingKey);
+  });
+}
+
+/** Pull extra bullets from the tailored CV text when the model returns too few. */
+function ensureMinExperienceBullets(cv: FormattedCv, tailoredCv: string): FormattedCv {
+  if (!tailoredCv.trim()) return cv;
+
+  return {
+    ...cv,
+    experience: cv.experience.map((role) => {
+      let bullets = expandBullets(role.bullets);
+
+      if (bullets.length < MIN_BULLETS_PER_ROLE) {
+        const sourceBullets = expandBullets(
+          findRoleSectionBullets(tailoredCv, role.company, role.title)
+        );
+
+        for (const sourceBullet of sourceBullets) {
+          if (bullets.length >= MIN_BULLETS_PER_ROLE) break;
+          if (!bulletAlreadyIncluded(sourceBullet, bullets)) {
+            bullets.push(sourceBullet);
+          }
+        }
+      }
+
+      while (bullets.length < MIN_BULLETS_PER_ROLE) {
+        const expandableIndex = bullets.findIndex((bullet) => splitCompoundBullet(bullet).length > 1);
+        if (expandableIndex < 0) break;
+
+        const expanded = splitCompoundBullet(bullets[expandableIndex]);
+        bullets = [
+          ...bullets.slice(0, expandableIndex),
+          ...expanded,
+          ...bullets.slice(expandableIndex + 1),
+        ];
+      }
+
+      return { ...role, bullets };
+    }),
+  };
+}
 
 /** Trim content so typical Word render stays within ~2 pages. */
 function trimForTwoPages(cv: FormattedCv): FormattedCv {
@@ -194,7 +316,7 @@ export function normalizeFormattedCv(raw: unknown): FormattedCv {
 
   const name = asString(o.name) || "CV";
 
-  return trimForTwoPages({
+  return {
     name,
     headline: asString(o.headline) || undefined,
     contact: {
@@ -209,7 +331,7 @@ export function normalizeFormattedCv(raw: unknown): FormattedCv {
     education,
     skills: normalizeSkills(o.skills),
     certifications: asStringArray(o.certifications),
-  });
+  };
 }
 
 export async function structureTailoredCv(
@@ -269,5 +391,48 @@ export async function structureTailoredCv(
     throw new Error("Invalid formatted CV response");
   }
 
-  return normalizeFormattedCv(parsed);
+  const normalized = normalizeFormattedCv(parsed);
+  return applyIrishSpellingToFormattedCv(
+    trimForTwoPages(ensureMinExperienceBullets(normalized, tailoredCv))
+  );
+}
+
+function spellCheckOptional(value: string | undefined): string | undefined {
+  return value ? applyIrishSpelling(value) : value;
+}
+
+function applyIrishSpellingToFormattedCv(cv: FormattedCv): FormattedCv {
+  return {
+    ...cv,
+    name: applyIrishSpelling(cv.name),
+    headline: spellCheckOptional(cv.headline),
+    contact: {
+      email: cv.contact.email,
+      phone: cv.contact.phone,
+      location: spellCheckOptional(cv.contact.location),
+      linkedin: cv.contact.linkedin,
+      website: cv.contact.website,
+    },
+    summary: spellCheckOptional(cv.summary),
+    experience: cv.experience.map((role) => ({
+      ...role,
+      title: applyIrishSpelling(role.title),
+      company: applyIrishSpelling(role.company),
+      location: spellCheckOptional(role.location),
+      dates: applyIrishSpelling(role.dates),
+      bullets: role.bullets.map(applyIrishSpelling),
+    })),
+    education: cv.education.map((entry) => ({
+      ...entry,
+      degree: applyIrishSpelling(entry.degree),
+      institution: applyIrishSpelling(entry.institution),
+      dates: spellCheckOptional(entry.dates),
+      details: spellCheckOptional(entry.details),
+    })),
+    skills: cv.skills.map((group) => ({
+      category: applyIrishSpelling(group.category),
+      items: group.items.map(applyIrishSpelling),
+    })),
+    certifications: cv.certifications?.map(applyIrishSpelling),
+  };
 }

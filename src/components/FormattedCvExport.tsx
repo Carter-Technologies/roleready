@@ -37,7 +37,7 @@ export function FormattedCvExport({ tailoredCv, slug, jobTitle }: FormattedCvExp
     return (
       <Link
         to="/pricing"
-        className="rounded-lg border border-olive-200 bg-olive-50 px-3 py-2 text-sm font-medium text-olive-800 hover:bg-olive-100"
+        className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-800 hover:bg-slate-50"
       >
         Formatted DOCX (Pro)
       </Link>
@@ -50,7 +50,7 @@ export function FormattedCvExport({ tailoredCv, slug, jobTitle }: FormattedCvExp
         type="button"
         onClick={() => void handleDownload()}
         disabled={busy}
-        className="rounded-lg bg-olive-600 px-3 py-2 text-sm font-medium text-white hover:bg-olive-700 disabled:opacity-50"
+        className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-800 hover:bg-slate-50 disabled:opacity-50"
       >
         {busy ? "Formatting…" : "Formatted DOCX"}
       </button>

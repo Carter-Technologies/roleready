@@ -1,4 +1,5 @@
 import { APP_NAME, APP_URL } from "./appMeta";
+import { applyIrishSpelling } from "./irishSpelling";
 
 export async function generateTailoredCv(
   cv: string,
@@ -38,6 +39,8 @@ Your job:
 - Create a tailored cover letter
 
 STRICT RULES:
+- Use Irish English spelling throughout (e.g. organisation, colour, prioritise, specialise, centre, programme, labour, recognise, analyse, honour, travelled, behaviour). Never use American spellings.
+- For each work experience role, include at least 3 bullet points when the source CV provides enough detail. Use every relevant achievement from the source; split long points if needed. Never invent achievements.
 - Do NOT ask for more information
 - Do NOT include placeholder text
 - Do NOT write instructions like "write here"
@@ -82,5 +85,5 @@ ${jobDesc}
     throw new Error("No content returned from AI");
   }
 
-  return result;
+  return applyIrishSpelling(result);
 }

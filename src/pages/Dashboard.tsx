@@ -284,12 +284,12 @@ export function Dashboard() {
             <div className="flex flex-wrap items-start justify-between gap-4">
               <h2 className="text-xl font-semibold text-slate-900">Tailored CV</h2>
               <div className="flex flex-wrap items-center gap-2">
+                <ExportMenu label="Tailored CV" slug="tailored-cv" text={outputCV} />
                 <FormattedCvExport
                   tailoredCv={outputCV}
                   slug="tailored-cv"
                   jobTitle={jobTitle}
                 />
-                <ExportMenu label="Tailored CV" slug="tailored-cv" text={outputCV} />
               </div>
             </div>
             <pre className="mt-4 max-h-[480px] overflow-auto whitespace-pre-wrap rounded-xl bg-slate-50 p-4 text-sm leading-relaxed text-slate-800">

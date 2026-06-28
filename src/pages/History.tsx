@@ -174,15 +174,15 @@ export function History() {
                     <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
                       <h3 className="font-medium text-slate-800">Tailored CV</h3>
                       <div className="flex flex-wrap items-center gap-2">
-                        <FormattedCvExport
-                          tailoredCv={item.tailored_cv || ""}
-                          slug={`cv-${item.id.slice(0, 8)}`}
-                          jobTitle={item.job_title ?? undefined}
-                        />
                         <ExportMenu
                           label="Tailored CV"
                           slug={`cv-${item.id.slice(0, 8)}`}
                           text={item.tailored_cv || ""}
+                        />
+                        <FormattedCvExport
+                          tailoredCv={item.tailored_cv || ""}
+                          slug={`cv-${item.id.slice(0, 8)}`}
+                          jobTitle={item.job_title ?? undefined}
                         />
                       </div>
                     </div>
