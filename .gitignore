@@ -28,3 +28,5 @@ public/pdf.worker.min.mjs
 .env
 .env.*
 !.env.example
+!.env.local.example
+!.env.local.example
