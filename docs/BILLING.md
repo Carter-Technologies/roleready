@@ -8,6 +8,7 @@
 | History | View saved generation(s) | Full history |
 | Master CV + PDF upload | Yes | Yes |
 | ATS analysis | No | Yes |
+| Formatted CV export (DOCX) | No | Yes |
 | Job tracker | No | Yes |
 | Interview prep / follow-up | No | Yes |
 

@@ -4,6 +4,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { AtsReport } from "../components/AtsReport";
 import { CvInput } from "../components/CvInput";
 import { ExportMenu } from "../components/ExportMenu";
+import { FormattedCvExport } from "../components/FormattedCvExport";
 import { PlanBanner } from "../components/PlanBanner";
 import { analyzeAts } from "../lib/analyzeAts";
 import { generateCV } from "../lib/generateCV";
@@ -25,6 +26,7 @@ export function Dashboard() {
   const [analysis, setAnalysis] = useState<AtsAnalysis | null>(null);
   const [outputCV, setOutputCV] = useState("");
   const [coverLetter, setCoverLetter] = useState("");
+  const [jobTitle, setJobTitle] = useState("");
   const [saveStatus, setSaveStatus] = useState("");
   const [trackerLink, setTrackerLink] = useState("");
   const [masterStatus, setMasterStatus] = useState("");
@@ -122,6 +124,7 @@ export function Dashboard() {
 
       setOutputCV(split.tailoredCV);
       setCoverLetter(split.coverLetter);
+      setJobTitle(jobMeta.displayTitle);
 
       const saved = await saveGeneration({
         userId: user.id,
@@ -280,7 +283,14 @@ export function Dashboard() {
           <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
             <div className="flex flex-wrap items-start justify-between gap-4">
               <h2 className="text-xl font-semibold text-slate-900">Tailored CV</h2>
-              <ExportMenu label="Tailored CV" slug="tailored-cv" text={outputCV} />
+              <div className="flex flex-wrap items-center gap-2">
+                <FormattedCvExport
+                  tailoredCv={outputCV}
+                  slug="tailored-cv"
+                  jobTitle={jobTitle}
+                />
+                <ExportMenu label="Tailored CV" slug="tailored-cv" text={outputCV} />
+              </div>
             </div>
             <pre className="mt-4 max-h-[480px] overflow-auto whitespace-pre-wrap rounded-xl bg-slate-50 p-4 text-sm leading-relaxed text-slate-800">
               {outputCV}

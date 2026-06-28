@@ -8,6 +8,7 @@ import { fetchProPricing } from "../lib/pricingClient";
 
 const proFeatures = [
   "Unlimited CV tailoring",
+  "Formatted CV export (DOCX)",
   "ATS scoring and reports",
   "Job tracker (kanban)",
   "Interview prep",

@@ -12,6 +12,7 @@ import { getUserFromRequest } from "./api/_lib/auth";
 import { generateFollowUpDraft } from "./api/_lib/followUpDraft";
 import { generateTailoredCv } from "./api/_lib/generate";
 import { generateInterviewPrep } from "./api/_lib/interviewPrep";
+import { structureTailoredCv } from "./api/_lib/formatCv";
 import { parsePdfFromBase64 } from "./api/_lib/parsePdf";
 import { getStripe } from "./api/_lib/stripe";
 import { deleteUserAccount } from "./api/_lib/deleteAccount";
@@ -60,6 +61,7 @@ const API_ROUTES = new Set([
   "/api/analyze-ats",
   "/api/interview-prep",
   "/api/draft-follow-up",
+  "/api/format-cv",
 ]);
 
 async function requireUserId(req: IncomingMessage, env: Record<string, string>): Promise<string> {
@@ -245,6 +247,17 @@ export function apiDevPlugin(): Plugin {
               apiKey()
             );
             sendJson(res, 200, { draft });
+            return;
+          }
+
+          if (url === "/api/format-cv") {
+            if (enforceBilling) await assertProFeature(userId, "Formatted CV export");
+            const formatted = await structureTailoredCv(
+              body.tailoredCv ?? "",
+              apiKey(),
+              body.jobTitle
+            );
+            sendJson(res, 200, { formatted });
             return;
           }
 

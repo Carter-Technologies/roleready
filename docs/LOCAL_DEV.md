@@ -82,3 +82,13 @@ node scripts/grant-pro.mjs you@email.com --free
 Uses `SUPABASE_SERVICE_ROLE_KEY` from `.env`. **If `.env` points at production Supabase, this upgrades that real account** — use a test email or staging project when possible.
 
 After granting, refresh the app or sign out/in. Tracker, ATS, and unlimited tailoring should unlock.
+
+## V5 — Formatted CV (local testing)
+
+On branch `feature/v5-formatted-docx`:
+
+1. Tailor a CV as usual (bullet view unchanged)
+2. Click **Formatted DOCX** (Pro) next to the tailored CV on Dashboard or History
+3. A structured Word file downloads with sections, headings, and bullets
+
+Requires `OPENROUTER_API_KEY` and Pro status (`grant-pro` script above).

@@ -4,6 +4,7 @@ import { Trash2 } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import { AtsReport } from "../components/AtsReport";
 import { ExportMenu } from "../components/ExportMenu";
+import { FormattedCvExport } from "../components/FormattedCvExport";
 import { PlanBanner, UpgradeButton } from "../components/PlanBanner";
 import type { AtsAnalysis } from "../lib/types";
 import {
@@ -172,11 +173,18 @@ export function History() {
                   <div>
                     <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
                       <h3 className="font-medium text-slate-800">Tailored CV</h3>
-                      <ExportMenu
-                        label="Tailored CV"
-                        slug={`cv-${item.id.slice(0, 8)}`}
-                        text={item.tailored_cv || ""}
-                      />
+                      <div className="flex flex-wrap items-center gap-2">
+                        <FormattedCvExport
+                          tailoredCv={item.tailored_cv || ""}
+                          slug={`cv-${item.id.slice(0, 8)}`}
+                          jobTitle={item.job_title ?? undefined}
+                        />
+                        <ExportMenu
+                          label="Tailored CV"
+                          slug={`cv-${item.id.slice(0, 8)}`}
+                          text={item.tailored_cv || ""}
+                        />
+                      </div>
                     </div>
                     <pre className="max-h-64 overflow-auto whitespace-pre-wrap rounded-lg bg-slate-50 p-4 text-sm text-slate-700">
                       {item.tailored_cv}
